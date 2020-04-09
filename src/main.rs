@@ -18,7 +18,7 @@ pub use value::Value;
 
 
 fn main() -> Result<()> {
-    Parser::new("1 + 0.5").parse()?;
+    Parser::new("1m + 0.5").parse()?;
 
     Ok(())
 }

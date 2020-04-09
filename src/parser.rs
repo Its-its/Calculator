@@ -41,27 +41,30 @@ impl<'a> Parser<'a> {
 
 		let mut slicer = TokenSlicer::new(tokens);
 
-		while slicer.tokens.len() > 1 {
+		while true {
 			let to_parse = self.parse_tokens(&mut slicer)?;
 
 			println!("Tokens: {:?}", slicer.tokens);
-			// println!("Found: {:?}", to_parse);
 			println!("");
+
+			if let Some(to_parse) = to_parse {
+				println!("Calculated: {}", to_parse.eval()?);
+				break;
+			}
 		}
 
-		// if let Some(to_parse) = to_parse {
-		// 	println!("Eval: {:?}", to_parse.eval()?);
-		// }
 
 		Ok(())
 	}
 
-	pub fn parse_tokens(&mut self, slicer: &mut TokenSlicer) -> ExpressionResult {
+	pub fn parse_tokens(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
+		// EXPONENTS ^
 		let found_exp = slicer.find(&Operator::Caret.into());
 		if let Some(pos) = found_exp.first() {
 			return self.parse_exponents(*pos, slicer);
 		}
 
+		// GROUPINGS ( [ {  } ] )
 		let found_grps = slicer.find(&ExprToken::StartGrouping);
 		if let Some(pos) = found_grps.first() {
 			return self.parse_parentheses(*pos, slicer);
@@ -86,10 +89,10 @@ impl<'a> Parser<'a> {
 			return self.parse_operation(*pos, slicer);
 		}
 
-		Err("Unable to parse current tokens.".into())
+		self.parse_finished(slicer)
 	}
 
-	pub fn parse_exponents(&mut self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
+	pub fn parse_exponents(&self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
 		slicer.backward();
 		slicer.set_pos(pos - 1);
 		let base = self.parse_number_expression(slicer)?;
@@ -109,7 +112,7 @@ impl<'a> Parser<'a> {
 		Ok(None)
 	}
 
-	pub fn parse_parentheses(&mut self, start_pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
+	pub fn parse_parentheses(&self, start_pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
 		// Find end, create new slicer inside of grouping.
 		slicer.set_pos(start_pos + 1);
 		slicer.forward();
@@ -143,7 +146,7 @@ impl<'a> Parser<'a> {
 		Ok(None)
 	}
 
-	pub fn parse_operation(&mut self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
+	pub fn parse_operation(&self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
 		let operator = slicer.get(pos).cloned().unwrap().into_operator();
 
 		slicer.backward();
@@ -166,7 +169,7 @@ impl<'a> Parser<'a> {
 	}
 
 
-	fn parse_number_expression<'b>(&mut self, slicer: &mut TokenSlicer) -> ExpressionResult<'b> {
+	fn parse_number_expression<'b>(&self, slicer: &mut TokenSlicer) -> ExpressionResult<'b> {
 		if slicer.is_reversed() {
 			let unit = self.parse_unit_expression(slicer)?;
 
@@ -191,10 +194,26 @@ impl<'a> Parser<'a> {
 		if slicer.is_next_value_func(|v| v.is_literal()) {
 			let val = return_value!(slicer, ExprToken::Literal);
 
-			//
+			crate::units::get_unit_from_literal(&val)
+			.map(|i| Some(i))
+			.ok_or(format!("No known unit named \"{}\"", val).into())
+		} else {
+			Ok(None)
 		}
+	}
 
-		Ok(None)
+	fn parse_finished(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
+		slicer.forward();
+		slicer.reset_pos();
+
+		match self.parse_number_expression(slicer)? {
+			Some(i) => {
+				slicer.clear();
+
+				Ok(Some(i))
+			},
+			None => Err("Unable to parse current tokens.".into())
+		}
 	}
 }
 
@@ -212,6 +231,10 @@ impl TokenSlicer {
 			pos: 0,
 			reversed: false
 		}
+	}
+
+	pub fn clear(&mut self) {
+		self.tokens.clear();
 	}
 
 	pub fn is_reversed(&mut self) -> bool {

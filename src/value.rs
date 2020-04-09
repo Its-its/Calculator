@@ -12,7 +12,19 @@ pub enum Value {
 }
 
 impl Value {
-	//
+	pub fn as_base_unit(&self) -> Option<&Box<dyn BaseUnit>> {
+		match self {
+			Value::Quantity(q) => q.unit(),
+			Value::Unit(u) => Some(u)
+		}
+	}
+
+	pub fn amount(&self) -> Option<f64> {
+		match self {
+			Value::Quantity(q) => Some(q.amount()),
+			Value::Unit(_) => None
+		}
+	}
 
 	pub fn into_tokens(self) -> Vec<ExprToken> {
 		let mut tokens = Vec::new();
@@ -39,10 +51,22 @@ impl Value {
 		match (left, right) {
 			(Value::Quantity(left), Value::Quantity(right)) => {
 				let (l_amount, r_amount) = (left.amount(), right.amount());
+				let (l_name, r_name) = (
+					left.unit().map(|u| u.short().unwrap_or(u.long()).to_string()).unwrap_or_default(),
+					right.unit().map(|u| u.short().unwrap_or(u.long()).to_string()).unwrap_or_default()
+				);
 
 				let value = left + right;
 
-				println!("Add: {} + {} = {}", l_amount, r_amount, value.amount());
+				println!(
+					"Add: {}{} + {}{} = {}",
+					l_amount,
+					l_name,
+					r_amount,
+					r_name,
+					value.amount()
+				);
+
 				Ok(Value::Quantity(value))
 			}
 
@@ -138,6 +162,15 @@ impl Clone for Value {
 		match self {
 			Value::Quantity(q) => Value::Quantity(Quantity::new_unit(q.amount(), q.unit().map(|i| crate::units::find_unit(i)))),
 			Value::Unit(u) => Value::Unit(crate::units::find_unit(u))
+		}
+	}
+}
+
+impl fmt::Display for Value {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Value::Quantity(q) => q.fmt(f),
+			Value::Unit(u) => u.fmt(f)
 		}
 	}
 }
