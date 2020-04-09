@@ -1,6 +1,7 @@
 // https://en.wikipedia.org/wiki/Metric_prefix
 // https://en.wikipedia.org/wiki/Non-SI_units_mentioned_in_the_SI
 
+use std::fmt;
 
 pub mod si;
 pub mod time;
@@ -26,7 +27,16 @@ macro_rules! match_conv {
 
 #[macro_export]
 macro_rules! create_non_standard_unit {
+	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr) => {
+		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, None);
+	};
+
 	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $shortName:expr) => {
+		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, Some($shortName));
+	};
+
+
+	(full $unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $shortName:expr) => {
 		#[derive(Debug, Clone)]
 		pub struct $unitName;
 
@@ -36,7 +46,7 @@ macro_rules! create_non_standard_unit {
 			}
 
 			fn short(&self) -> Option<&str> {
-				Some($shortName)
+				$shortName
 			}
 
 			fn alt(&self) -> Option<&str> {
@@ -56,11 +66,19 @@ macro_rules! create_non_standard_unit {
 
 #[macro_export]
 macro_rules! create_standard_unit {
+	($unitName:ident, $longName:expr) => {
+		create_standard_unit!(full $unitName, $longName, None, []);
+	};
+
 	($unitName:ident, $longName:expr, $shortName:expr) => {
-		create_standard_unit!($unitName, $longName, $shortName, []);
+		create_standard_unit!(full $unitName, $longName, Some($shortName), []);
 	};
 
 	($unitName:ident, $longName:expr, $shortName:expr, [ $($otherUnitName:ty = $amount:expr),* ]) => {
+		create_standard_unit!(full $unitName, $longName, Some($shortName), [ $($otherUnitName:ty = $amount:expr),* ]);
+	};
+
+	(full $unitName:ident, $longName:expr, $shortName:expr, [ $($otherUnitName:ty = $amount:expr),* ]) => {
 		#[derive(Debug, Clone)]
 		pub struct $unitName;
 
@@ -70,7 +88,7 @@ macro_rules! create_standard_unit {
 			}
 
 			fn short(&self) -> Option<&str> {
-				Some($shortName)
+				$shortName
 			}
 
 			fn alt(&self) -> Option<&str> {
@@ -114,6 +132,17 @@ pub trait BaseUnit: std::fmt::Debug {
 impl PartialEq for dyn BaseUnit {
 	fn eq(&self, other: &dyn BaseUnit) -> bool {
 		self.long() == other.long()
+	}
+}
+
+
+impl fmt::Display for dyn BaseUnit {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		if let Some(short) = self.short() {
+			f.write_str(short)
+		} else {
+			f.write_str(self.long())
+		}
 	}
 }
 

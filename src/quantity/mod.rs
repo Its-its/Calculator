@@ -1,4 +1,4 @@
-use std::ops;
+use std::{ops, fmt};
 
 use crate::{BaseUnit, Result};
 
@@ -48,6 +48,21 @@ impl Quantity {
 		self.1
 	}
 }
+
+
+impl fmt::Display for Quantity {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.write_str(&format!("{}", self.amount()))?;
+
+		match self.unit() {
+			Some(u) => u.fmt(f)?,
+			None => ()
+		}
+
+		Ok(())
+	}
+}
+
 
 impl ops::Add for Quantity {
 	type Output = Quantity;

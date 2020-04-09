@@ -4,7 +4,7 @@ use crate::{create_non_standard_unit, create_standard_unit};
 use super::BaseUnit;
 
 
-create_standard_unit!(Byte, "byte", "byte");
+create_standard_unit!(Byte, "byte", "B");
 
 create_non_standard_unit!(Bit, Byte, 0.125, "bit", "bit");
 create_non_standard_unit!(KiloByte, Byte, 1024.0, "kilobyte", "kB");
