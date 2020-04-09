@@ -1,6 +1,6 @@
 use std::ops;
 
-use crate::{BaseUnit, Result, Error};
+use crate::{BaseUnit, Result};
 
 
 pub mod math;

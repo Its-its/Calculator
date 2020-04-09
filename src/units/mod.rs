@@ -2,8 +2,6 @@
 // https://en.wikipedia.org/wiki/Non-SI_units_mentioned_in_the_SI
 
 
-use crate::Result;
-
 pub mod si;
 pub mod time;
 pub mod data;
@@ -91,46 +89,6 @@ macro_rules! create_standard_unit {
 }
 
 
-pub trait Convert<T>: Sized {
-	fn factor(&self) -> f64;
-}
-
-pub trait Unit: Sized {
-	fn long_name(&self) -> &str;
-	fn short_name(&self) -> Option<&str> { None }
-	fn alt_name(&self) -> Option<&str> { None }
-}
-
-
-// TODO: Place into Quantity
-#[derive(Debug, Clone)]
-pub enum Value {
-	String(String),
-	Number(f64)
-}
-
-impl Value {
-	pub fn as_number(&self) -> f64 {
-		match self {
-			Value::Number(value) => *value,
-			_ => panic!("Value is not a Number")
-		}
-	}
-}
-
-impl From<f64> for Value {
-	fn from(value: f64) -> Self {
-		Value::Number(value)
-	}
-}
-
-impl From<String> for Value {
-	fn from(value: String) -> Self {
-		Value::String(value)
-	}
-}
-
-
 pub trait BaseUnit: std::fmt::Debug {
 	fn long(&self) -> &str;
 	fn short(&self) -> Option<&str>;
@@ -165,14 +123,3 @@ pub fn is_convertable(from: &dyn BaseUnit, to: &dyn BaseUnit) -> bool {
 	.unwrap_or(from)
 	.can_convert_to(to)
 }
-
-
-// pub fn convert(value: &Value, from: &BaseUnit, to: &BaseUnit) -> Result<f64> {
-// 	if is_convertable(from, to) {
-// 		let val = value.as_number();
-
-// 		Ok(val * from.factor() / to.factor())
-// 	} else {
-// 		Err(format!(r#"Values of type "{}" and "{}" are not able to be compaired or converted."#, from.long(), to.long()).into())
-// 	}
-// }
