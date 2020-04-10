@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::equations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate};
+use crate::equations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion};
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -66,6 +66,15 @@ impl Operator {
 			Operator::Caret => {
 				Box::new(
 					Exponentiate::new(
+						left,
+						right
+					)
+				)
+			}
+
+			Operator::ConvertInto => {
+				Box::new(
+					Conversion::new(
 						left,
 						right
 					)

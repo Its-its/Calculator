@@ -123,6 +123,27 @@ impl Expression for Exponentiate {
 
 
 #[derive(Debug)]
+pub struct Conversion(ExpressionArg, ExpressionArg);
+
+impl Conversion {
+	pub fn new(left: ExpressionArg, right: ExpressionArg) -> Self {
+		Conversion(left, right)
+	}
+}
+
+
+impl Expression for Conversion {
+	fn eval(&self) -> Result<Value> {
+		let left = self.0.eval()?;
+		let right = self.1.eval()?;
+
+		Ok(Value::try_conversion(left, right)?)
+	}
+}
+
+
+
+#[derive(Debug)]
 pub struct Literal(Value);
 
 impl Literal {

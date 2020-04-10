@@ -3,6 +3,7 @@ use std::{fmt, ops};
 use conversion::{Quantity, BaseUnit};
 
 use crate::{Result, Error, ExprToken};
+use crate::units::{convert, find_unit};
 
 
 #[derive(Debug)]
@@ -16,6 +17,13 @@ impl Value {
 		match self {
 			Value::Quantity(q) => q.unit(),
 			Value::Unit(u) => Some(u)
+		}
+	}
+
+	pub fn clone_base_unit(&self) -> Option<Box<dyn BaseUnit>> {
+		match self {
+			Value::Quantity(q) => q.unit().map(|u| find_unit(u)),
+			Value::Unit(u) => Some(find_unit(u))
 		}
 	}
 
@@ -132,6 +140,18 @@ impl Value {
 
 			_ => Err("Unable to divide.".into())
 		}
+	}
+
+	pub fn try_conversion(left: Value, right: Value) -> Result<Value> {
+		let (l_amount, r_amount) = (left.amount(), right.amount());
+
+		let unit = right.clone_base_unit();
+
+		let value = convert(&left, &right)?;
+
+		println!("Con: {} -> {} = {}", l_amount.unwrap_or_default(), r_amount.unwrap_or_default(), value);
+
+		Ok(Value::Quantity(Quantity::new_unit(value, unit)))
 	}
 
 	// Unimplemented

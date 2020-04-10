@@ -89,6 +89,13 @@ impl<'a> Parser<'a> {
 			return self.parse_operation(*pos, slicer);
 		}
 
+		// Should be Conversion.
+		let mut found_ci = slicer.find(&Operator::ConvertInto.into());
+		if let Some(pos) = found_ci.first() {
+			return self.parse_operation(*pos, slicer);
+		}
+
+
 		self.parse_finished(slicer)
 	}
 
@@ -178,12 +185,20 @@ impl<'a> Parser<'a> {
 
 				return Ok(Some(Box::new(Literal::new(Value::Quantity(Quantity::new_unit(value, unit))))));
 			}
+
+			else if let Some(unit) = unit {
+				return Ok(Some(Box::new(Literal::new(Value::Unit(unit)))));
+			}
 		} else {
 			if slicer.is_next_value_func(|v| v.is_number()) {
 				let value = return_value!(slicer, ExprToken::Number);
 				let unit = self.parse_unit_expression(slicer)?;
 
 				return Ok(Some(Box::new(Literal::new(Value::Quantity(Quantity::new_unit(value, unit))))));
+			}
+
+			else if let Some(unit) = self.parse_unit_expression(slicer)? {
+				return Ok(Some(Box::new(Literal::new(Value::Unit(unit)))));
 			}
 		}
 
@@ -202,15 +217,19 @@ impl<'a> Parser<'a> {
 		}
 	}
 
+
 	fn parse_finished(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
 		slicer.forward();
 		slicer.reset_pos();
 
 		match self.parse_number_expression(slicer)? {
 			Some(i) => {
-				slicer.clear();
-
-				Ok(Some(i))
+				if slicer.is_finished() {
+					slicer.clear();
+					Ok(Some(i))
+				} else {
+					Err("Unable to parse remaining tokens.".into())
+				}
 			},
 			None => Err("Unable to parse current tokens.".into())
 		}
@@ -231,6 +250,10 @@ impl TokenSlicer {
 			pos: 0,
 			reversed: false
 		}
+	}
+
+	pub fn is_finished(&self) -> bool {
+		self.get_pos() == self.tokens.len()
 	}
 
 	pub fn clear(&mut self) {
