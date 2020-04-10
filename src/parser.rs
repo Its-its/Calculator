@@ -181,7 +181,11 @@ impl<'a> Parser<'a> {
 
 		let expr = operator.compare(prev.ok_or(Error::InputEmpty)?, next.ok_or(Error::InputEmpty)?);
 
-		slicer.replace(start_pos..end_pos, expr.eval()?.into_tokens());
+		let eval = expr.eval()?;
+
+		// TODO: Impl check for Comparison? Add Boolean Token?
+
+		slicer.replace(start_pos..end_pos, eval.into_tokens());
 
 		Ok(None)
 	}

@@ -13,6 +13,15 @@ pub enum Value {
 }
 
 impl Value {
+	pub fn new_quantity(value: f64) -> Value {
+		Value::Quantity(Quantity::new(value))
+	}
+
+	pub fn new_quantity_unit(value: f64, unit: Option<Box<dyn BaseUnit>>) -> Value {
+		Value::Quantity(Quantity::new_unit(value, unit))
+	}
+
+
 	pub fn as_base_unit(&self) -> Option<&Box<dyn BaseUnit>> {
 		match self {
 			Value::Quantity(q) => q.unit(),
@@ -176,25 +185,12 @@ impl Value {
 			}
 		)))
 	}
-
-	// Unimplemented
-
-	pub fn try_equals(left: Value, right: Value) -> Result<Value> {
-		match (left, right) {
-			(Value::Quantity(left), Value::Quantity(right)) => {
-				Err("Unable to equal.".into())
-			}
-
-			_ => Err("Unable to equal.".into())
-		}
-	}
 }
 
 impl PartialEq for Value {
 	fn eq(&self, other: &Value) -> bool {
 		match (self, other) {
 			(Value::Quantity(q1), Value::Quantity(q2)) => q1 == q2,
-			//
 			_ => false
 		}
 	}

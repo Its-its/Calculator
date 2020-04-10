@@ -18,7 +18,25 @@ pub use value::Value;
 
 
 fn main() -> Result<()> {
-    Parser::new("1,000GB == 1TB").parse()?;
+    println!("Calc: {}", Parser::new("4GB / 1GB").parse()? == Value::new_quantity(2.0));
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_operations() {
+        assert_eq!(Parser::new("3GB - 1GB").parse().unwrap(), Value::new_quantity(2.0));
+        assert_eq!(Parser::new("1GB + 1GB").parse().unwrap(), Value::new_quantity(2.0));
+        assert_eq!(Parser::new("1GB * 1GB").parse().unwrap(), Value::new_quantity(1.0));
+        assert_eq!(Parser::new("4GB / 2GB").parse().unwrap(), Value::new_quantity(2.0));
+        assert_eq!(Parser::new("1GB == 1GB").parse().unwrap(), Value::new_quantity(1.0));
+        assert_eq!(Parser::new("2GB > 1GB").parse().unwrap(), Value::new_quantity(1.0));
+        assert_eq!(Parser::new("2GB >= 1GB").parse().unwrap(), Value::new_quantity(1.0));
+        assert_eq!(Parser::new("1GB < 2GB").parse().unwrap(), Value::new_quantity(1.0));
+        assert_eq!(Parser::new("1GB <= 2GB").parse().unwrap(), Value::new_quantity(1.0));
+    }
 }
