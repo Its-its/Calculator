@@ -1,4 +1,5 @@
 use std::{ops, fmt};
+use std::cmp::{Ordering, PartialOrd};
 
 use crate::{BaseUnit, Result};
 
@@ -38,6 +39,14 @@ impl Quantity {
 
 	pub fn amount(&self) -> f64 {
 		self.0
+	}
+
+	pub fn total_amount(&self) -> f64 {
+		if let Some(unit) = self.unit() {
+			self.amount() * unit.base_factor()
+		} else {
+			self.amount()
+		}
 	}
 
 	pub fn unit(&self) -> Option<&Box<dyn BaseUnit>> {
@@ -93,5 +102,19 @@ impl ops::Div for Quantity {
 
 	fn div(self, other: Quantity) -> Self::Output {
 		Quantity::new_unit(self.amount() / other.amount(), self.1)
+	}
+}
+
+impl PartialOrd for Quantity {
+	fn partial_cmp(&self, other: &Quantity) -> Option<Ordering> {
+		Some(
+			if self.amount() == other.amount() {
+				Ordering::Equal
+			} else if self.amount() > other.amount() {
+				Ordering::Greater
+			} else {
+				Ordering::Less
+			}
+		)
 	}
 }
