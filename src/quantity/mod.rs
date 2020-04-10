@@ -8,11 +8,9 @@ pub mod math;
 pub mod physics;
 
 pub type FunctionResult = Result<Quantity>;
-pub type FunctionParams<'a> = &'a [Quantity];
-
 
 pub trait FunctionEval: std::fmt::Debug {
-	fn eval(params: FunctionParams) -> FunctionResult;
+	fn eval<F: Iterator<Item = Quantity>>(params: F) -> FunctionResult;
 }
 
 
@@ -41,6 +39,10 @@ impl Quantity {
 		self.0
 	}
 
+	pub fn set_amount(&mut self, value: f64) {
+		self.0 = value;
+	}
+
 	pub fn total_amount(&self) -> f64 {
 		if let Some(unit) = self.unit() {
 			self.amount() * unit.base_factor()
@@ -55,6 +57,15 @@ impl Quantity {
 
 	pub fn into_unit(self) -> Option<Box<dyn BaseUnit>> {
 		self.1
+	}
+
+
+	pub fn this_or_that_fn<F: Fn(f64, f64) -> bool>(self, other: Self, func: F) -> Self {
+		if func(self.total_amount(), other.total_amount()) {
+			self
+		} else {
+			other
+		}
 	}
 }
 
