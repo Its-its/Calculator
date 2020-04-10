@@ -2,7 +2,7 @@ use std::{fmt, ops};
 
 use conversion::{Quantity, BaseUnit};
 
-use crate::{Result, Error, ExprToken};
+use crate::{Result, Error, ExprToken, Operator};
 use crate::units::{convert, find_unit};
 
 
@@ -30,6 +30,13 @@ impl Value {
 	pub fn amount(&self) -> Option<f64> {
 		match self {
 			Value::Quantity(q) => Some(q.amount()),
+			Value::Unit(_) => None
+		}
+	}
+
+	pub fn total_amount(&self) -> Option<f64> {
+		match self {
+			Value::Quantity(q) => Some(q.total_amount()),
 			Value::Unit(_) => None
 		}
 	}
@@ -152,6 +159,22 @@ impl Value {
 		println!("Con: {} -> {} = {}", l_amount.unwrap_or_default(), r_amount.unwrap_or_default(), value);
 
 		Ok(Value::Quantity(Quantity::new_unit(value, unit)))
+	}
+
+	pub fn try_comparison(left: Value, right: Value, op: &Operator) -> Result<Value> {
+		let (l_amount, r_amount) = (left.total_amount(), right.total_amount());
+
+		Ok(Value::Quantity(Quantity::new(
+			match op {
+				Operator::GreaterThan => (l_amount > r_amount) as usize as f64,
+				Operator::GreaterThanOrEqual => (l_amount >= r_amount) as usize as f64,
+				Operator::LessThan => (l_amount < r_amount) as usize as f64,
+				Operator::LessThanOrEqual => (l_amount <= r_amount) as usize as f64,
+				Operator::DoubleEqual => (l_amount == r_amount) as usize as f64,
+				Operator::DoesNotEqual => (l_amount != r_amount) as usize as f64,
+				_ => return Err(Error::Text("Invalid Operator when trying to compare".into()))
+			}
+		)))
 	}
 
 	// Unimplemented

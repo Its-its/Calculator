@@ -28,7 +28,19 @@ pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 		Box::new(Feet),
 		Box::new(Yard),
 		Box::new(Mile),
-		Box::new(NauticalMile)
+		Box::new(NauticalMile),
+
+		// DATA
+		Box::new(Byte),
+		Box::new(Bit),
+		Box::new(KiloByte),
+		Box::new(MegaByte),
+		Box::new(GigaByte),
+		Box::new(TeraByte),
+		Box::new(PetaByte),
+		Box::new(ExaByte),
+		Box::new(ZettaByte),
+		Box::new(YottaByte)
 	]
 }
 

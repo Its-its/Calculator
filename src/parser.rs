@@ -33,7 +33,7 @@ impl<'a> Parser<'a> {
 		}
 	}
 
-	pub fn parse(&mut self) -> Result<()> {
+	pub fn parse(&mut self) -> Result<Value> {
 		let tokens = self.tokenizer.parse()?;
 
 		println!("Parsed Tokens: {:?}", tokens);
@@ -41,20 +41,18 @@ impl<'a> Parser<'a> {
 
 		let mut slicer = TokenSlicer::new(tokens);
 
-		while true {
+		loop {
 			let to_parse = self.parse_tokens(&mut slicer)?;
 
 			println!("Tokens: {:?}", slicer.tokens);
 			println!("");
 
 			if let Some(to_parse) = to_parse {
-				println!("Calculated: {}", to_parse.eval()?);
-				break;
+				return Ok(to_parse.eval()?);
 			}
 		}
 
-
-		Ok(())
+		Err("Unable to parse.".into())
 	}
 
 	pub fn parse_tokens(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
@@ -92,6 +90,19 @@ impl<'a> Parser<'a> {
 		// Should be Conversion.
 		let mut found_ci = slicer.find(&Operator::ConvertInto.into());
 		if let Some(pos) = found_ci.first() {
+			return self.parse_operation(*pos, slicer);
+		}
+
+		// Should be Greater, Less, Etc. Whichever comes first.
+		let mut found_gl = slicer.find(&Operator::GreaterThan.into());
+		found_gl.append(&mut slicer.find(&Operator::GreaterThanOrEqual.into()));
+		found_gl.append(&mut slicer.find(&Operator::LessThan.into()));
+		found_gl.append(&mut slicer.find(&Operator::LessThanOrEqual.into()));
+		found_gl.append(&mut slicer.find(&Operator::DoubleEqual.into()));
+		found_gl.append(&mut slicer.find(&Operator::DoesNotEqual.into()));
+		found_gl.sort();
+
+		if let Some(pos) = found_gl.first() {
 			return self.parse_operation(*pos, slicer);
 		}
 

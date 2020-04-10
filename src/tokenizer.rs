@@ -4,12 +4,13 @@ use regex::Regex;
 
 pub type Id<T> = (&'static str, T);
 
-pub static DOUBLE_CHAR_TOKENS: [Id<ExprToken>; 5] = [
+pub static DOUBLE_CHAR_TOKENS: [Id<ExprToken>; 6] = [
 	("->", ExprToken::Operator(Operator::ConvertInto)),
 	("<=", ExprToken::Operator(Operator::LessThanOrEqual)),
 	(">=", ExprToken::Operator(Operator::GreaterThanOrEqual)),
 	("!=", ExprToken::Operator(Operator::DoesNotEqual)),
-	("~=", ExprToken::Operator(Operator::ApproxEqual))
+	("~=", ExprToken::Operator(Operator::ApproxEqual)),
+	("==", ExprToken::Operator(Operator::DoubleEqual))
 ];
 
 pub static SINGLE_CHAR_TOKENS: [Id<ExprToken>; 15] = [
@@ -81,15 +82,14 @@ impl<'a> Tokenizer<'a> {
 	fn parse_number(&mut self) -> ParseResult {
 		let remains = self.get_remaining_str();
 
-		let mut builder = Regex::new(r#"^((?:[0-9]+)?\.?(?:e-?)?(?:[0-9]+)?)"#).unwrap();
+		let mut builder = Regex::new(r#"^((?:[0-9,]+)?\.?(?:e-?)?(?:[0-9]+)?)"#).unwrap();
 
 		if let Some(found) = builder.find(remains) {
 			if found.end() != 0 {
 				let num = {
-					remains.get(0..found.end())
-						.unwrap()
-						.parse()
-						.unwrap()
+					let number = remains.get(0..found.end()).unwrap();
+
+					number.replace(",", "").parse().unwrap()
 				};
 
 				self.consume_amount(found.end());

@@ -1,10 +1,8 @@
 use std::fmt;
 
-use conversion::{
-	Quantity, BaseUnit
-};
+use conversion::{Quantity, BaseUnit};
 
-use crate::{Result, Value};
+use crate::{Result, Value, Operator};
 
 
 pub type ExpressionArg = Box<dyn Expression>;
@@ -140,6 +138,32 @@ impl Expression for Conversion {
 		Ok(Value::try_conversion(left, right)?)
 	}
 }
+
+
+
+#[derive(Debug)]
+pub struct Comparison(ExpressionArg, ExpressionArg, Operator);
+
+impl Comparison {
+	pub fn new(left: ExpressionArg, right: ExpressionArg, op: Operator) -> Self {
+		Comparison(left, right, op)
+	}
+}
+
+
+impl Expression for Comparison {
+	fn eval(&self) -> Result<Value> {
+		let left = self.0.eval()?;
+		let right = self.1.eval()?;
+
+		Ok(Value::try_comparison(left, right, &self.2)?)
+	}
+}
+
+
+
+
+
 
 
 

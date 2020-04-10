@@ -18,7 +18,7 @@ pub use value::Value;
 
 
 fn main() -> Result<()> {
-    Parser::new("1min -> s").parse()?;
+    Parser::new("1,000GB == 1TB").parse()?;
 
     Ok(())
 }

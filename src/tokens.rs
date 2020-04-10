@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::equations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion};
+use crate::equations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion, Comparison};
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -15,10 +15,12 @@ pub enum Operator {
 	ConvertInto,
 
 	Equal,
+
 	GreaterThan,
 	LessThan,
 	GreaterThanOrEqual,
 	LessThanOrEqual,
+	DoubleEqual,
 	DoesNotEqual,
 	ApproxEqual
 }
@@ -81,6 +83,21 @@ impl Operator {
 				)
 			}
 
+			op @ Operator::GreaterThan |
+			op @ Operator::GreaterThanOrEqual |
+			op @ Operator::LessThan |
+			op @ Operator::LessThanOrEqual |
+			op @ Operator::DoubleEqual |
+			op @ Operator::DoesNotEqual => {
+				Box::new(
+					Comparison::new(
+						left,
+						right,
+						op.clone()
+					)
+				)
+			}
+
 			_ => panic!("Cannot compare with this Operator")
 		}
 	}
@@ -104,7 +121,8 @@ impl fmt::Display for Operator {
 			Operator::GreaterThanOrEqual => f.write_str(">="),
 			Operator::LessThanOrEqual => f.write_str("<="),
 			Operator::DoesNotEqual => f.write_str("!="),
-			Operator::ApproxEqual => f.write_str("~=")
+			Operator::ApproxEqual => f.write_str("~="),
+			Operator::DoubleEqual => f.write_str("==")
 		}
 	}
 }
