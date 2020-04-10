@@ -16,7 +16,7 @@ pub trait FunctionEval: std::fmt::Debug {
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Quantity(f64, Option<Box<dyn BaseUnit>>);
 
 impl Quantity {
@@ -116,5 +116,11 @@ impl PartialOrd for Quantity {
 				Ordering::Less
 			}
 		)
+	}
+}
+
+impl PartialEq for Quantity {
+	fn eq(&self, other: &Quantity) -> bool {
+		self.amount() == other.amount()
 	}
 }
