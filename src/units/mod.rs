@@ -53,8 +53,8 @@ macro_rules! create_non_standard_unit {
 				None
 			}
 
-			fn conversion_factor_for(&self, _unit: &dyn BaseUnit) -> Option<f64> {
-				Some($factor)
+			fn base_factor(&self) -> f64 {
+				$factor
 			}
 
 			fn base_unit(&self) -> Option<&dyn BaseUnit> {
@@ -95,10 +95,6 @@ macro_rules! create_standard_unit {
 				None
 			}
 
-			fn conversion_factor_for(&self, _unit: &dyn BaseUnit) -> Option<f64> {
-				Some(1.0)
-			}
-
 			fn base_unit(&self) -> Option<&dyn BaseUnit> {
 				None
 			}
@@ -120,12 +116,18 @@ pub trait BaseUnit: std::fmt::Debug {
 		None
 	}
 
-	fn conversion_factor_for(&self, _unit: &dyn BaseUnit) -> Option<f64> {
-		None
+	fn can_convert_to(&self, unit: &dyn BaseUnit) -> bool {
+		if self.base_long() == unit.base_long() {
+			true
+		} else {
+			false
+		}
 	}
 
-	fn can_convert_to(&self, unit: &dyn BaseUnit) -> bool {
-		self.conversion_factor_for(unit).is_some()
+	fn base_long(&self) -> &str {
+		self.base_unit()
+		.map(|u| u.base_long())
+		.unwrap_or(self.long())
 	}
 }
 
@@ -134,7 +136,6 @@ impl PartialEq for dyn BaseUnit {
 		self.long() == other.long()
 	}
 }
-
 
 impl fmt::Display for dyn BaseUnit {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
