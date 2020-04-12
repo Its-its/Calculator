@@ -47,15 +47,16 @@ impl<'a> Parser<'a> {
 		let mut slicer = TokenSlicer::new(tokens);
 
 		loop {
-			let to_parse = self.parse_tokens(&mut slicer)?;
+			let current_operation = self.parse_tokens(&mut slicer)?;
 
-			print_dbg!("parse_tokens: {:?}", slicer.tokens);
 			print_dbg!("");
 
-			if let Some(to_parse) = to_parse {
-				print_dbg!("Eval: {:?}", to_parse);
-
-				return Ok(to_parse.eval()?);
+			// This should be what it JUST did.
+			if let Some(to_parse) = current_operation {
+				if slicer.is_finished() {
+					print_dbg!("Finished: {:?}", to_parse);
+					return Ok(to_parse.eval()?);
+				}
 			}
 		}
 
@@ -237,6 +238,7 @@ impl<'a> Parser<'a> {
 	}
 
 
+	// TODO: Remove from slicer if found...
 	fn parse_number_expression<'b>(&self, slicer: &mut TokenSlicer) -> ExpressionResult<'b> {
 		if slicer.is_reversed() {
 			let unit = self.parse_unit_expression(slicer)?;
@@ -287,7 +289,7 @@ impl<'a> Parser<'a> {
 
 		match self.parse_number_expression(slicer)? {
 			Some(i) => {
-				if slicer.is_finished() {
+				if slicer.is_finished() || slicer.tokens.len() == 1 {
 					slicer.clear();
 					Ok(Some(i))
 				} else {
@@ -316,7 +318,7 @@ impl TokenSlicer {
 	}
 
 	pub fn is_finished(&self) -> bool {
-		self.get_pos() == self.tokens.len()
+		self.get_pos() == self.tokens.len() || self.tokens.is_empty()
 	}
 
 	pub fn clear(&mut self) {
