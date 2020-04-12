@@ -1,6 +1,6 @@
-use crate::{ExprToken, Operator, Result};
-
 use regex::Regex;
+
+use crate::{ExprToken, Operator, Result};
 
 pub type Id<T> = (&'static str, T);
 
@@ -13,7 +13,8 @@ pub static DOUBLE_CHAR_TOKENS: [Id<ExprToken>; 6] = [
 	("==", ExprToken::Operator(Operator::DoubleEqual))
 ];
 
-pub static SINGLE_CHAR_TOKENS: [Id<ExprToken>; 15] = [
+pub static SINGLE_CHAR_TOKENS: [Id<ExprToken>; 16] = [
+	(",", ExprToken::Comma),
 	("(", ExprToken::StartGrouping),
 	(")", ExprToken::EndGrouping),
 	("[", ExprToken::StartGrouping),
@@ -54,9 +55,9 @@ impl<'a> Tokenizer<'a> {
 		while !self.is_finished() {
 			let found = None
 				.or_else(|| self.remove_non_essiential())
-				.or_else(|| self.parse_number())
 				.or_else(|| self.parse_tokens(&DOUBLE_CHAR_TOKENS))
 				.or_else(|| self.parse_tokens(&SINGLE_CHAR_TOKENS))
+				.or_else(|| self.parse_number())
 				.or_else(|| self.parse_literal());
 
 			if let Some(found) = found {
@@ -85,14 +86,21 @@ impl<'a> Tokenizer<'a> {
 		let mut builder = Regex::new(r#"^((?:[0-9,]+)?\.?(?:e-?)?(?:[0-9]+)?)"#).unwrap();
 
 		if let Some(found) = builder.find(remains) {
-			if found.end() != 0 {
+			let mut end = found.end();
+
+			if end != 0 {
 				let num = {
-					let number = remains.get(0..found.end()).unwrap();
+					// If ending has a comma remove it.
+					if remains.get(end - 1..end) == Some(",") {
+						end -= 1;
+					}
+
+					let number = remains.get(0..end).unwrap();
 
 					number.replace(",", "").parse().unwrap()
 				};
 
-				self.consume_amount(found.end());
+				self.consume_amount(end);
 
 				Some(ExprToken::Number(num))
 			} else {

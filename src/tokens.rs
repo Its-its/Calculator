@@ -130,6 +130,7 @@ impl fmt::Display for Operator {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExprToken {
+	Comma,
 	Whitespace,
 	StartGrouping,
 	EndGrouping,
@@ -200,6 +201,7 @@ impl ExprToken {
 impl fmt::Display for ExprToken {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
+			ExprToken::Comma => f.write_str(","),
 			ExprToken::Whitespace => f.write_str(" "),
 			ExprToken::StartGrouping => f.write_str("("),
 			ExprToken::EndGrouping => f.write_str(")"),

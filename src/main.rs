@@ -18,7 +18,7 @@ pub use value::Value;
 
 
 fn main() -> Result<()> {
-    println!("Calc: {}", Parser::new("4GB / 1GB").parse()? == Value::new_quantity(2.0));
+    println!("Got: {}", Parser::new("max(1.5, 10.0)").parse()?);
 
     Ok(())
 }

@@ -1,13 +1,11 @@
 use std::fmt;
 
-use conversion::{Quantity, BaseUnit};
+use conversion::{Quantity, BaseUnit, FunctionEval};
 
-use crate::{Result, Value, Operator};
+use crate::{Result, Error, Value, Operator, ExprToken};
 
 
 pub type ExpressionArg = Box<dyn Expression>;
-pub type CallFunction = fn(ExpressionArg, ExpressionArg) -> ExpressionArg;
-
 
 pub trait Expression: fmt::Debug {
 	fn eval(&self) -> Result<Value>;
@@ -23,7 +21,6 @@ impl Add {
 		Add(left, right)
 	}
 }
-
 
 impl Expression for Add {
 	fn eval(&self) -> Result<Value> {
@@ -45,7 +42,6 @@ impl Subtract {
 	}
 }
 
-
 impl Expression for Subtract {
 	fn eval(&self) -> Result<Value> {
 		let left = self.0.eval()?;
@@ -65,7 +61,6 @@ impl Multiply {
 		Multiply(left, right)
 	}
 }
-
 
 impl Expression for Multiply {
 	fn eval(&self) -> Result<Value> {
@@ -87,7 +82,6 @@ impl Divide {
 	}
 }
 
-
 impl Expression for Divide {
 	fn eval(&self) -> Result<Value> {
 		let left = self.0.eval()?;
@@ -107,7 +101,6 @@ impl Exponentiate {
 		Exponentiate(left, right)
 	}
 }
-
 
 impl Expression for Exponentiate {
 	fn eval(&self) -> Result<Value> {
@@ -129,7 +122,6 @@ impl Conversion {
 	}
 }
 
-
 impl Expression for Conversion {
 	fn eval(&self) -> Result<Value> {
 		let left = self.0.eval()?;
@@ -150,7 +142,6 @@ impl Comparison {
 	}
 }
 
-
 impl Expression for Comparison {
 	fn eval(&self) -> Result<Value> {
 		let left = self.0.eval()?;
@@ -162,8 +153,28 @@ impl Expression for Comparison {
 
 
 
+#[derive(Debug)]
+pub struct Function(Box<FunctionEval>, Vec<ExpressionArg>);
 
+impl Function {
+	pub fn new(func: Box<FunctionEval>, args: Vec<ExpressionArg>) -> Self {
+		Function(func, args)
+	}
+}
 
+impl Expression for Function {
+	fn eval(&self) -> Result<Value> {
+		let params = self.1.iter()
+			.map(|i| i.eval())
+			.collect::<Result<Vec<Value>>>()?;
+
+		let params = params.into_iter()
+			.map(|i| i.into_quantity().ok_or(Error::Text("Expected Quantity".into())))
+			.collect::<Result<Vec<Quantity>>>()?;
+
+		Ok(Value::Quantity(self.0.eval(params)?))
+	}
+}
 
 
 

@@ -3,11 +3,17 @@ use std::ops::RangeBounds;
 use conversion::{Quantity, BaseUnit};
 
 use crate::{Operator, ExprToken, Tokenizer, Result, Error, Value};
-use crate::equations::{Add, Subtract, Divide, Multiply, Literal, Grouping, ExpressionArg};
+use crate::equations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
 
-//
+pub static DEBUG_MODE: bool = false;
 
 pub type ExpressionResult<'a> = Result<Option<ExpressionArg>>;
+
+#[macro_use]
+macro_rules! print_dbg {
+	() => (if DEBUG_MODE { println!(); });
+	($($arg:tt)*) => (if DEBUG_MODE { println!($($arg)*); });
+}
 
 
 macro_rules! return_value {
@@ -36,18 +42,19 @@ impl<'a> Parser<'a> {
 	pub fn parse(&mut self) -> Result<Value> {
 		let tokens = self.tokenizer.parse()?;
 
-		println!("Parsed Tokens: {:?}", tokens);
-		println!("");
+		print_dbg!("Parsed Tokens: {:?}", tokens);
 
 		let mut slicer = TokenSlicer::new(tokens);
 
 		loop {
 			let to_parse = self.parse_tokens(&mut slicer)?;
 
-			println!("Tokens: {:?}", slicer.tokens);
-			println!("");
+			print_dbg!("parse_tokens: {:?}", slicer.tokens);
+			print_dbg!("");
 
 			if let Some(to_parse) = to_parse {
+				print_dbg!("Eval: {:?}", to_parse);
+
 				return Ok(to_parse.eval()?);
 			}
 		}
@@ -56,6 +63,8 @@ impl<'a> Parser<'a> {
 	}
 
 	pub fn parse_tokens(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
+		print_dbg!(" - Parse: {:?}", slicer.tokens);
+
 		// EXPONENTS ^
 		let found_exp = slicer.find(&Operator::Caret.into());
 		if let Some(pos) = found_exp.first() {
@@ -111,6 +120,8 @@ impl<'a> Parser<'a> {
 	}
 
 	pub fn parse_exponents(&self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
+		print_dbg!("parse_exponents");
+
 		slicer.backward();
 		slicer.set_pos(pos - 1);
 		let base = self.parse_number_expression(slicer)?;
@@ -131,12 +142,45 @@ impl<'a> Parser<'a> {
 	}
 
 	pub fn parse_parentheses(&self, start_pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
-		// Find end, create new slicer inside of grouping.
+		print_dbg!("parse_parentheses");
+
+		// Ignore first parentheses
 		slicer.set_pos(start_pos + 1);
 		slicer.forward();
 
+		if start_pos != 0 {
+			// Is it a literal before the parentheses?
+			// If so it's a function.
+			if let Some(ExprToken::Literal(func_name)) = slicer.get(start_pos - 1) {
+				let func = crate::functions::get_func_from_literal(func_name)
+					.ok_or(Error::Text("Not a valid function.".into()))?;
+
+				// Capture everything after Function Name.
+				let mut inner_slicer = slicer.clone_from(start_pos + 1, slicer.tokens.len() - 1);
+
+				let mut params = Vec::new();
+
+				loop {
+					if let Some(expr) = self.parse_number_expression(&mut inner_slicer)? {
+						params.push(expr);
+
+						if !inner_slicer.consume_if_next(&ExprToken::Comma) {
+							break;
+						}
+					} else {
+						break;
+					}
+				}
+
+				let expr: ExpressionArg = Box::new(Function::new(func, params));
+
+				return Ok(Some(expr));
+			}
+		}
+
 		loop {
 			if let Some(item) = slicer.next() {
+				// Inner grouping?
 				if item == ExprToken::StartGrouping {
 					return self.parse_parentheses(slicer.get_pos() - 1, slicer);
 				}
@@ -146,7 +190,7 @@ impl<'a> Parser<'a> {
 					// slicer without the start and end Groupings
 					let mut group_slicer = slicer.clone_from(start_pos + 1, end_pos - 1);
 
-					self.parse_tokens(&mut group_slicer)?;
+					let parsed = self.parse_tokens(&mut group_slicer)?;
 
 					if group_slicer.tokens.len() == 1 {
 						slicer.replace(start_pos..end_pos, group_slicer.tokens);
@@ -154,7 +198,7 @@ impl<'a> Parser<'a> {
 						slicer.replace(start_pos + 1..end_pos - 1, group_slicer.tokens);
 					}
 
-					return Ok(None)
+					return Ok(parsed);
 				}
 			} else {
 				return Err(Error::InputEmpty);
@@ -165,6 +209,8 @@ impl<'a> Parser<'a> {
 	}
 
 	pub fn parse_operation(&self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
+		print_dbg!("parse_operation");
+
 		let operator = slicer.get(pos).cloned().unwrap().into_operator();
 
 		slicer.backward();
@@ -187,7 +233,7 @@ impl<'a> Parser<'a> {
 
 		slicer.replace(start_pos..end_pos, eval.into_tokens());
 
-		Ok(None)
+		Ok(Some(expr))
 	}
 
 
@@ -234,6 +280,8 @@ impl<'a> Parser<'a> {
 
 
 	fn parse_finished(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
+		println!("parse_finished");
+
 		slicer.forward();
 		slicer.reset_pos();
 
@@ -312,7 +360,7 @@ impl TokenSlicer {
 	pub fn find(&self, token: &ExprToken) -> Vec<usize> {
 		self.tokens.iter()
 			.enumerate()
-			.filter(|(_, e)| e == &token)
+			.filter(|(i, e)| e == &token && i >= &self.get_pos())
 			.map(|(u, _)| u)
 			.collect()
 	}
@@ -320,7 +368,7 @@ impl TokenSlicer {
 	pub fn find_fn<F>(&self, exp_fn: F) -> Vec<usize> where F: Fn(&ExprToken) -> bool {
 		self.tokens.iter()
 			.enumerate()
-			.filter(|(_, e)| exp_fn(e))
+			.filter(|(i, e)| exp_fn(e) && i >= &self.get_pos())
 			.map(|(u, _)| u)
 			.collect()
 	}
@@ -335,6 +383,10 @@ impl TokenSlicer {
 
 	pub fn replace<I>(&mut self, range: I, replace_with: Vec<ExprToken>) where I: RangeBounds<usize> {
 		let _ = self.tokens.splice(range, replace_with).count();
+	}
+
+	pub fn previous(&self) -> Option<&ExprToken> {
+		self.get(self.pos - 1)
 	}
 
 	pub fn next(&mut self) -> Option<ExprToken> {

@@ -70,6 +70,20 @@ impl Value {
 		tokens
 	}
 
+	pub fn into_quantity(self) -> Option<Quantity> {
+		match self {
+			Value::Quantity(q) => Some(q),
+			_ => None
+		}
+	}
+
+	pub fn into_base_unit(self) -> Option<Box<dyn BaseUnit>> {
+		match self {
+			Value::Quantity(q) => q.into_unit(),
+			Value::Unit(u) => Some(u)
+		}
+	}
+
 
 	pub fn try_add(left: Value, right: Value) -> Result<Value> {
 		match (left, right) {
