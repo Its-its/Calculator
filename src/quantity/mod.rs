@@ -10,7 +10,7 @@ pub mod physics;
 pub type FunctionResult = Result<Quantity>;
 
 pub trait FunctionEval: std::fmt::Debug {
-	fn eval<F: Iterator<Item = Quantity>>(params: F) -> FunctionResult;
+	fn eval(&self, params: Vec<Quantity>) -> FunctionResult;
 }
 
 

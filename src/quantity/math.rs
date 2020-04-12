@@ -12,8 +12,10 @@ macro_rules! create_single {
 		pub struct $struc;
 
 		impl FunctionEval for $struc {
-			fn eval<F: Iterator<Item = Quantity>>(mut params: F) -> FunctionResult {
-				let mut last_item = next(&mut params)?;
+			fn eval(&self, params: Vec<Quantity>) -> FunctionResult {
+				let mut iter = params.into_iter();
+
+				let mut last_item = next(&mut iter)?;
 
 				last_item.set_amount(last_item.amount().$func());
 
@@ -29,9 +31,11 @@ macro_rules! create_double {
 		pub struct $struc;
 
 		impl FunctionEval for $struc {
-			fn eval<F: Iterator<Item = Quantity>>(mut params: F) -> FunctionResult {
-				let mut first = next(&mut params)?;
-				let second = next(&mut params)?;
+			fn eval(&self, params: Vec<Quantity>) -> FunctionResult {
+				let mut iter = params.into_iter();
+
+				let mut first = next(&mut iter)?;
+				let second = next(&mut iter)?;
 
 				first.set_amount(first.amount().$func(second.amount()));
 
@@ -46,10 +50,12 @@ macro_rules! create_double {
 pub struct Min;
 
 impl FunctionEval for Min {
-	fn eval<F: Iterator<Item = Quantity>>(mut params: F) -> FunctionResult {
-		let mut last_item = next(&mut params)?;
+	fn eval(&self, params: Vec<Quantity>) -> FunctionResult {
+		let mut iter = params.into_iter();
 
-		while let Some(other) = params.next() {
+		let mut last_item = next(&mut iter)?;
+
+		while let Some(other) = iter.next() {
 			last_item = last_item.this_or_that_fn(other, |a, b| a.min(b) == a)
 		}
 
@@ -62,10 +68,12 @@ impl FunctionEval for Min {
 pub struct Max;
 
 impl FunctionEval for Max {
-	fn eval<F: Iterator<Item = Quantity>>(mut params: F) -> FunctionResult {
-		let mut last_item = next(&mut params)?;
+	fn eval(&self, params: Vec<Quantity>) -> FunctionResult {
+		let mut iter = params.into_iter();
 
-		while let Some(other) = params.next() {
+		let mut last_item = next(&mut iter)?;
+
+		while let Some(other) = iter.next() {
 			last_item = last_item.this_or_that_fn(other, |a, b| a.max(b) == a)
 		}
 
