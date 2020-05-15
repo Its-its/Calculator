@@ -97,12 +97,13 @@ impl Value {
 				let value = left + right;
 
 				println!(
-					"Add: {}{} + {}{} = {}",
+					"Add: {}{} + {}{} = {}{}",
 					l_amount,
 					l_name,
 					r_amount,
 					r_name,
-					value.amount()
+					value.amount(),
+					value.unit().map(|u| u.short().unwrap_or(u.long()).to_string()).unwrap_or_default()
 				);
 
 				Ok(Value::Quantity(value))
@@ -187,17 +188,19 @@ impl Value {
 	pub fn try_comparison(left: Value, right: Value, op: &Operator) -> Result<Value> {
 		let (l_amount, r_amount) = (left.total_amount(), right.total_amount());
 
-		Ok(Value::Quantity(Quantity::new(
-			match op {
-				Operator::GreaterThan => (l_amount > r_amount) as usize as f64,
-				Operator::GreaterThanOrEqual => (l_amount >= r_amount) as usize as f64,
-				Operator::LessThan => (l_amount < r_amount) as usize as f64,
-				Operator::LessThanOrEqual => (l_amount <= r_amount) as usize as f64,
-				Operator::DoubleEqual => (l_amount == r_amount) as usize as f64,
-				Operator::DoesNotEqual => (l_amount != r_amount) as usize as f64,
-				_ => return Err(Error::Text("Invalid Operator when trying to compare".into()))
-			}
-		)))
+		let value = match op {
+			Operator::GreaterThan => (l_amount > r_amount) as usize as f64,
+			Operator::GreaterThanOrEqual => (l_amount >= r_amount) as usize as f64,
+			Operator::LessThan => (l_amount < r_amount) as usize as f64,
+			Operator::LessThanOrEqual => (l_amount <= r_amount) as usize as f64,
+			Operator::DoubleEqual => (l_amount == r_amount) as usize as f64,
+			Operator::DoesNotEqual => (l_amount != r_amount) as usize as f64,
+			_ => return Err(Error::Text("Invalid Operator when trying to compare".into()))
+		};
+
+		println!("Comp: {} {} {} = {}", l_amount.clone().unwrap_or_default(), op, r_amount.clone().unwrap_or_default(), value);
+
+		Ok(Value::Quantity(Quantity::new(value)))
 	}
 }
 

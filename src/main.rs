@@ -18,25 +18,33 @@ pub use value::Value;
 
 
 fn main() -> Result<()> {
-    println!("Got: {}", Parser::new("max(1.5, 10.0)").parse()?);
+	println!("Got: {}", Parser::new("1 + 1").parse()?);
 
-    Ok(())
+	Ok(())
 }
+
+
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+	use super::*;
 
-    #[test]
-    fn test_operations() {
-        assert_eq!(Parser::new("3GB - 1GB").parse().unwrap(), Value::new_quantity(2.0));
-        assert_eq!(Parser::new("1GB + 1GB").parse().unwrap(), Value::new_quantity(2.0));
-        assert_eq!(Parser::new("1GB * 1GB").parse().unwrap(), Value::new_quantity(1.0));
-        assert_eq!(Parser::new("4GB / 2GB").parse().unwrap(), Value::new_quantity(2.0));
-        assert_eq!(Parser::new("1GB == 1GB").parse().unwrap(), Value::new_quantity(1.0));
-        assert_eq!(Parser::new("2GB > 1GB").parse().unwrap(), Value::new_quantity(1.0));
-        assert_eq!(Parser::new("2GB >= 1GB").parse().unwrap(), Value::new_quantity(1.0));
-        assert_eq!(Parser::new("1GB < 2GB").parse().unwrap(), Value::new_quantity(1.0));
-        assert_eq!(Parser::new("1GB <= 2GB").parse().unwrap(), Value::new_quantity(1.0));
-    }
+	#[test]
+	fn test_operations() {
+		assert_eq!(Parser::new("3GB - 1GB").parse().unwrap(), Value::new_quantity(2.0));
+		assert_eq!(Parser::new("1GB + 1GB").parse().unwrap(), Value::new_quantity(2.0));
+		assert_eq!(Parser::new("1GB * 1GB").parse().unwrap(), Value::new_quantity(1.0));
+		assert_eq!(Parser::new("4GB / 2GB").parse().unwrap(), Value::new_quantity(2.0));
+		assert_eq!(Parser::new("1GB == 1GB").parse().unwrap(), Value::new_quantity(1.0));
+		assert_eq!(Parser::new("2GB > 1GB").parse().unwrap(), Value::new_quantity(1.0));
+		assert_eq!(Parser::new("2GB >= 1GB").parse().unwrap(), Value::new_quantity(1.0));
+		assert_eq!(Parser::new("1GB < 2GB").parse().unwrap(), Value::new_quantity(1.0));
+		assert_eq!(Parser::new("1GB <= 2GB").parse().unwrap(), Value::new_quantity(1.0));
+	}
+
+	#[test]
+	fn test_functions() {
+		assert_eq!(Parser::new("max(1.5, 10.0)").parse().unwrap(), Value::new_quantity(10.0));
+		assert_eq!(Parser::new("max(1.5, 10.0, 30.0, 15.0)").parse().unwrap(), Value::new_quantity(30.0));
+	}
 }
