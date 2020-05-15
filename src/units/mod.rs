@@ -2,6 +2,7 @@
 // https://en.wikipedia.org/wiki/Non-SI_units_mentioned_in_the_SI
 
 use std::fmt;
+use std::cmp;
 
 pub mod si;
 pub mod time;
@@ -133,9 +134,37 @@ pub trait BaseUnit: std::fmt::Debug {
 
 impl PartialEq for dyn BaseUnit {
 	fn eq(&self, other: &dyn BaseUnit) -> bool {
-		self.long() == other.long()
+		self.base_factor() == other.base_factor()
 	}
 }
+
+impl PartialOrd for dyn BaseUnit {
+	fn partial_cmp(&self, other: &dyn BaseUnit) -> Option<cmp::Ordering> {
+		Some(
+			if self.base_factor() > other.base_factor() {
+				cmp::Ordering::Greater
+			} else if self.base_factor() > other.base_factor() {
+				cmp::Ordering::Less
+			} else {
+				cmp::Ordering::Equal
+			}
+		)
+	}
+}
+
+impl Ord for dyn BaseUnit {
+	fn cmp(&self, other: &dyn BaseUnit) -> cmp::Ordering {
+		if self.base_factor() > other.base_factor() {
+			cmp::Ordering::Greater
+		} else if self.base_factor() > other.base_factor() {
+			cmp::Ordering::Less
+		} else {
+			cmp::Ordering::Equal
+		}
+	}
+}
+
+impl Eq for dyn BaseUnit {}
 
 impl fmt::Display for dyn BaseUnit {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

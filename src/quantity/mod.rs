@@ -22,6 +22,14 @@ impl Quantity {
 		Quantity(value, None)
 	}
 
+	pub fn new_from_base_unit(value: f64, unit: Option<Box<dyn BaseUnit>>) -> Quantity {
+		if let Some(unit) = unit {
+			Quantity(value / unit.base_factor(), Some(unit))
+		} else {
+			Quantity(value, None)
+		}
+	}
+
 	pub fn new_unit(value: f64, unit: Option<Box<dyn BaseUnit>>) -> Quantity {
 		Quantity(value, unit)
 	}
@@ -88,7 +96,20 @@ impl ops::Add for Quantity {
 	type Output = Quantity;
 
 	fn add(self, other: Quantity) -> Self::Output {
-		Quantity::new_unit(self.amount() + other.amount(), self.1)
+		// TODO: New Quantity should use nearest unit.
+		// - 900GB + 200GB = 1.1TB
+		// - 1h - 30m = 30m
+
+		let total_amount = self.total_amount() + other.total_amount();
+
+		// Return Largest Unit.
+		let unit = return_unit(
+			self.into_unit(),
+			other.into_unit(),
+			|v1, v2| std::cmp::max(v1, v2)
+		);
+
+		Quantity::new_from_base_unit(total_amount, unit)
 	}
 }
 
@@ -104,7 +125,16 @@ impl ops::Mul for Quantity {
 	type Output = Quantity;
 
 	fn mul(self, other: Quantity) -> Self::Output {
-		Quantity::new_unit(self.amount() * other.amount(), self.1)
+		let total_amount = self.total_amount() * other.total_amount();
+
+		// Return Largest Unit.
+		let unit = return_unit(
+			self.into_unit(),
+			other.into_unit(),
+			|v1, v2| std::cmp::max(v1, v2)
+		);
+
+		Quantity::new_from_base_unit(total_amount, unit)
 	}
 }
 
@@ -133,5 +163,19 @@ impl PartialOrd for Quantity {
 impl PartialEq for Quantity {
 	fn eq(&self, other: &Quantity) -> bool {
 		self.amount() == other.amount()
+	}
+}
+
+
+fn return_unit<E, F>(u1: Option<E>, u2: Option<E>, func: F) -> Option<E> where F: FnOnce(E, E) -> E {
+	match (u1, u2) {
+		(Some(u), None) |
+		(None, Some(u)) => Some(u),
+
+		(Some(u1), Some(u2)) => {
+			Some(func(u1, u2))
+		},
+
+		(None, None) => None
 	}
 }
