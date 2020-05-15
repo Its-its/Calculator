@@ -28,20 +28,28 @@ macro_rules! match_conv {
 
 #[macro_export]
 macro_rules! create_non_standard_unit {
-	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr) => {
-		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, None);
+	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $multiName:expr) => {
+		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, $multiName, None, []);
 	};
 
-	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $shortName:expr) => {
-		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, Some($shortName));
+	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $multiName:expr, $shortName:expr) => {
+		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, $multiName, Some($shortName), []);
+	};
+
+	($unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $multiName:expr, $shortName:expr, [$($alts:expr),*]) => {
+		create_non_standard_unit!(full $unitName, $baseUnit, $factor, $longName, $multiName, Some($shortName), [$($alts),*]);
 	};
 
 
-	(full $unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $shortName:expr) => {
+	(full $unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $multiName:expr, $shortName:expr, [$($alts:expr),*]) => {
 		#[derive(Debug, Clone)]
 		pub struct $unitName;
 
 		impl BaseUnit for $unitName {
+			fn multiple(&self) -> &str {
+				$multiName
+			}
+
 			fn long(&self) -> &str {
 				$longName
 			}
@@ -50,8 +58,8 @@ macro_rules! create_non_standard_unit {
 				$shortName
 			}
 
-			fn alt(&self) -> Option<&str> {
-				None
+			fn alt(&self) -> Vec<&str> {
+				vec![$($alts),*]
 			}
 
 			fn base_factor(&self) -> f64 {
@@ -67,23 +75,27 @@ macro_rules! create_non_standard_unit {
 
 #[macro_export]
 macro_rules! create_standard_unit {
-	($unitName:ident, $longName:expr) => {
-		create_standard_unit!(full $unitName, $longName, None, []);
+	($unitName:ident, $longName:expr, $multiName:expr) => {
+		create_standard_unit!(full $unitName, $longName, $multiName, None, []);
 	};
 
-	($unitName:ident, $longName:expr, $shortName:expr) => {
-		create_standard_unit!(full $unitName, $longName, Some($shortName), []);
+	($unitName:ident, $longName:expr, $multiName:expr, $shortName:expr) => {
+		create_standard_unit!(full $unitName, $longName, $multiName, Some($shortName), []);
 	};
 
-	($unitName:ident, $longName:expr, $shortName:expr, [ $($otherUnitName:ty = $amount:expr),* ]) => {
-		create_standard_unit!(full $unitName, $longName, Some($shortName), [ $($otherUnitName:ty = $amount:expr),* ]);
+	($unitName:ident, $longName:expr, $multiName:expr, $shortName:expr, [$($alts:expr),*]) => {
+		create_standard_unit!(full $unitName, $longName, $longName, $multiName, Some($shortName), [$($alts),*]);
 	};
 
-	(full $unitName:ident, $longName:expr, $shortName:expr, [ $($otherUnitName:ty = $amount:expr),* ]) => {
+	(full $unitName:ident, $longName:expr, $multiName:expr, $shortName:expr, [$($alts:expr),*]) => {
 		#[derive(Debug, Clone)]
 		pub struct $unitName;
 
 		impl BaseUnit for $unitName {
+			fn multiple(&self) -> &str {
+				$multiName
+			}
+
 			fn long(&self) -> &str {
 				$longName
 			}
@@ -92,8 +104,8 @@ macro_rules! create_standard_unit {
 				$shortName
 			}
 
-			fn alt(&self) -> Option<&str> {
-				None
+			fn alt(&self) -> Vec<&str> {
+				vec![$($alts),*]
 			}
 
 			fn base_unit(&self) -> Option<&dyn BaseUnit> {
@@ -123,9 +135,13 @@ impl Clone for Box<dyn BaseUnit> {
 
 
 pub trait BaseUnit: std::fmt::Debug + CloneBaseUnit {
+	/// Display name for multiple units.
+	fn multiple(&self) -> &str;
+	/// Display name for singular unit.
 	fn long(&self) -> &str;
+
 	fn short(&self) -> Option<&str>;
-	fn alt(&self) -> Option<&str>;
+	fn alt(&self) -> Vec<&str>;
 
 	fn base_factor(&self) -> f64 {
 		1.0

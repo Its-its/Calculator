@@ -9,11 +9,11 @@ use super::BaseUnit;
 
 
 
-create_standard_unit!(Second, "second", "s");
-create_standard_unit!(Meter, "meter", "m");
-create_standard_unit!(Gram, "gram", "g");
-create_standard_unit!(Kilogram, "kilogram", "kg");
-create_standard_unit!(Ampere, "ampere", "A");
-create_standard_unit!(Mole, "mole", "mol");
-create_standard_unit!(Kelvin, "kelvin", "K");
-create_standard_unit!(Candela, "candela", "cd");
+create_standard_unit!(Second, "second", "seconds", "s");
+create_standard_unit!(Meter, "meter", "meters", "m");
+create_standard_unit!(Gram, "gram", "grams", "g");
+create_standard_unit!(Kilogram, "kilogram", "kilograms", "kg");
+create_standard_unit!(Ampere, "ampere", "amperes", "A");
+create_standard_unit!(Mole, "mole", "moles", "mol");
+create_standard_unit!(Kelvin, "kelvin", "kelvins", "K");
+create_standard_unit!(Candela, "candela", "candelas", "cd");
