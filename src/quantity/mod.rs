@@ -9,7 +9,25 @@ pub mod physics;
 
 pub type FunctionResult = Result<Quantity>;
 
-pub trait FunctionEval: std::fmt::Debug {
+
+// Adds the ability to clone Box<dyn FunctionEval>
+pub trait CloneFunctionEval {
+	fn clone_fn_eval(&self) -> Box<dyn FunctionEval>;
+}
+
+impl<T> CloneFunctionEval for T where T: FunctionEval + Clone + 'static {
+	fn clone_fn_eval(&self) -> Box<dyn FunctionEval> {
+		Box::new(self.clone())
+	}
+}
+
+impl Clone for Box<dyn FunctionEval> {
+	fn clone(&self) -> Self {
+		self.clone_fn_eval()
+	}
+}
+
+pub trait FunctionEval: fmt::Debug + CloneFunctionEval {
 	fn eval(&self, params: Vec<Quantity>) -> FunctionResult;
 }
 

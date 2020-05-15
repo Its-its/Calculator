@@ -104,7 +104,25 @@ macro_rules! create_standard_unit {
 }
 
 
-pub trait BaseUnit: std::fmt::Debug {
+// Adds the ability to clone Box<dyn BaseUnit>
+pub trait CloneBaseUnit {
+	fn clone_base_unit(&self) -> Box<dyn BaseUnit>;
+}
+
+impl<T> CloneBaseUnit for T where T: BaseUnit + Clone + 'static {
+	fn clone_base_unit(&self) -> Box<dyn BaseUnit> {
+		Box::new(self.clone())
+	}
+}
+
+impl Clone for Box<dyn BaseUnit> {
+	fn clone(&self) -> Self {
+		self.clone_base_unit()
+	}
+}
+
+
+pub trait BaseUnit: std::fmt::Debug + CloneBaseUnit {
 	fn long(&self) -> &str;
 	fn short(&self) -> Option<&str>;
 	fn alt(&self) -> Option<&str>;
