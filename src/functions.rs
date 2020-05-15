@@ -44,10 +44,3 @@ pub fn default_functions<'a>() -> Vec<(&'a str, Box<dyn FunctionEval>)> {
 		("atan2", Box::new(Atan2))
 	]
 }
-
-pub fn get_func_from_literal<'a>(name: &str) -> Option<Box<dyn FunctionEval>> {
-	default_functions()
-	.into_iter()
-	.find(|u| u.0 == name)
-	.map(|i| i.1)
-}

@@ -2,7 +2,7 @@ use std::ops::RangeBounds;
 
 use conversion::{Quantity, BaseUnit};
 
-use crate::{Operator, ExprToken, Tokenizer, Result, Error, Value};
+use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
 use crate::equations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
 
 pub static DEBUG_MODE: bool = true;
@@ -59,6 +59,7 @@ macro_rules! return_value {
 
 
 pub struct Parser<'a> {
+	factory: &'a Factory,
 	tokenizer: Tokenizer<'a>,
 	eval: &'a str,
 	pub parsed_tokens: Vec<ExprToken>,
@@ -66,8 +67,9 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-	pub fn new(eval: &'a str) -> Self {
+	pub fn new(factory: &'a Factory, eval: &'a str) -> Self {
 		Parser {
+			factory,
 			eval,
 			steps: Vec::new(),
 			parsed_tokens: Vec::new(),
@@ -258,7 +260,7 @@ impl<'a> Parser<'a> {
 			if let Some(ExprToken::Literal(func_name)) = slicer.peek_previous() {
 				print_dbg!(" - Function Literal: {}", func_name);
 
-				let func = crate::functions::get_func_from_literal(func_name)
+				let func = self.factory.find_func(func_name)
 					.ok_or(Error::Text("Not a valid function.".into()))?;
 
 				// Capture everything after Function Name and inside the parentheses.
@@ -444,7 +446,7 @@ impl<'a> Parser<'a> {
 		if slicer.is_next_value_func(|v| v.is_literal()) {
 			let val = return_value!(slicer, ExprToken::Literal);
 
-			crate::units::get_unit_from_literal(&val)
+			self.factory.find_unit(&val)
 			.map(|i| Some(i))
 			.ok_or(format!("No known unit named \"{}\"", val).into())
 		} else {

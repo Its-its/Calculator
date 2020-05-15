@@ -44,22 +44,6 @@ pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 	]
 }
 
-pub fn find_unit(unit: &Box<dyn BaseUnit>) -> Box<dyn BaseUnit> {
-	default_units()
-	.into_iter()
-	.find(|u| u == unit)
-	.unwrap()
-}
-
-pub fn get_unit_from_literal(name: &str) -> Option<Box<dyn BaseUnit>> {
-	default_units()
-	.into_iter()
-	.find(|u| {
-		u.long() == name ||
-		u.short().map(|i| i == name).unwrap_or_default() ||
-		u.alt().map(|i| i == name).unwrap_or_default()
-	})
-}
 
 pub fn convert(from: &Value, to: &Value) -> Result<f64> {
 	// TODO: Currently will error if doing: 1 -> ms

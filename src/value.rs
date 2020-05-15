@@ -3,7 +3,7 @@ use std::{fmt, ops};
 use conversion::{Quantity, BaseUnit};
 
 use crate::{Result, Error, ExprToken, Operator};
-use crate::units::{convert, find_unit};
+use crate::units::convert;
 
 
 #[derive(Debug)]
@@ -31,8 +31,8 @@ impl Value {
 
 	pub fn clone_base_unit(&self) -> Option<Box<dyn BaseUnit>> {
 		match self {
-			Value::Quantity(q) => q.unit().map(|u| find_unit(u)),
-			Value::Unit(u) => Some(find_unit(u))
+			Value::Quantity(q) => q.unit().cloned(),
+			Value::Unit(u) => Some(u.clone())
 		}
 	}
 
@@ -216,8 +216,8 @@ impl PartialEq for Value {
 impl Clone for Value {
 	fn clone(&self) -> Self {
 		match self {
-			Value::Quantity(q) => Value::Quantity(Quantity::new_unit(q.amount(), q.unit().map(|i| crate::units::find_unit(i)))),
-			Value::Unit(u) => Value::Unit(crate::units::find_unit(u))
+			Value::Quantity(q) => Value::Quantity(Quantity::new_unit(q.amount(), q.unit().cloned())),
+			Value::Unit(u) => Value::Unit(u.clone())
 		}
 	}
 }
