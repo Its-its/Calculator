@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::*;
 
-use conversion_parser::{Parser, Operator, ExprToken, Tokenizer};
+use conversion_parser::{Factory, Operator, ExprToken, Tokenizer};
 
 use crate::{Line, LineDisplay, Table};
 
@@ -59,7 +59,9 @@ pub fn register_display() {
 }
 
 pub fn display_parsed(eval: &str) {
-	let mut parser = Parser::new(eval);
+	let factory = Factory::new();
+
+	let mut parser = factory.create_parser(eval);
 
 	match parser.parse() {
 		Ok(v) => {
