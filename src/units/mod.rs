@@ -4,6 +4,8 @@
 use std::fmt;
 use std::cmp;
 
+use crate::Units;
+
 pub mod si;
 pub mod time;
 pub mod data;
@@ -211,8 +213,26 @@ impl fmt::Display for dyn BaseUnit {
 }
 
 
-pub fn is_convertable(from: &dyn BaseUnit, to: &dyn BaseUnit) -> bool {
-	from.base_unit()
-	.unwrap_or(from)
-	.can_convert_to(to)
+pub fn is_convertable(from: &Units, to: &Units) -> bool {
+	let from_base = from.base();
+	let to_base = to.base();
+
+	if !from_base.base_unit()
+		.unwrap_or(from_base.as_ref())
+		.can_convert_to(to_base.as_ref()) {
+		return false;
+	}
+
+	let from_base = from.base_2();
+	let to_base = to.base_2();
+
+	match (from_base, to_base) {
+		(Some(from), Some(to)) => {
+			from.base_unit()
+				.unwrap_or(from.as_ref())
+				.can_convert_to(to.as_ref())
+		}
+
+		_ => true
+	}
 }
