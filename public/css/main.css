@@ -73,6 +73,12 @@ input {
 
 
 /* VALUES */
+.amount,
+.operator,
+.literal {
+	margin-right: 3px;
+}
+
 .amount {
 }
 

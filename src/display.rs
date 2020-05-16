@@ -44,15 +44,7 @@ impl<'a> LineDisplay for Line<'a> {
 		for token in self.value {
 			let value: HtmlSpanElement = create_element("span");
 
-			if token.is_operator() {
-				value.set_inner_text(&format!(" {} ", token));
-			} else if let ExprToken::Number(n) = token {
-				value.set_inner_text(&format!("{}", n));
-			} else if token.is_literal() {
-				value.set_inner_text(&format!(" {}", token));
-			} else {
-				value.set_inner_text(&format!("{}", token));
-			}
+			value.set_inner_text(&format!("{}", token));
 
 			match token {
 				ExprToken::Literal(_) => {value.class_list().add_1("literal");},
