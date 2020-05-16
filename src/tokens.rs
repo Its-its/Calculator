@@ -196,6 +196,13 @@ impl ExprToken {
 			_ => panic!("Not an Operator")
 		}
 	}
+
+	pub fn from_literal(self) -> String {
+		match self {
+			ExprToken::Literal(l) => l,
+			_ => panic!("Not an Literal")
+		}
+	}
 }
 
 impl fmt::Display for ExprToken {

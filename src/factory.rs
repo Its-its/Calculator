@@ -39,7 +39,7 @@ impl Factory {
 		.find(|u| {
 			u.long() == name ||
 			u.short().map(|i| i == name).unwrap_or_default() ||
-			u.alt().map(|i| i == name).unwrap_or_default()
+			u.alt().into_iter().find(|i| i == &name).is_some()
 		})
 		.map(|i| i.clone())
 	}

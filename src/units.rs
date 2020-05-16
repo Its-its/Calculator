@@ -53,10 +53,21 @@ pub fn convert(from: &Value, to: &Value) -> Result<f64> {
 		None => return from.amount().ok_or(Error::Text("Base Conversion isn't a number.".into()))
 	};
 
-	if is_convertable(from_unit.as_ref(), to_unit.as_ref()) {
-		let val = from.amount().unwrap();
+	if is_convertable(from_unit, to_unit) {
+		let mut val = from.amount().unwrap();
 
-		Ok(val * from_unit.base_factor() / to_unit.base_factor())
+		if !from_unit.is_base_equal(to_unit) {
+			val = val * from_unit.base().base_factor() / to_unit.base().base_factor();
+		}
+
+		if !from_unit.is_base_2_equal(to_unit) {
+			let factor_1 = from_unit.base_2().map(|b| b.base_factor()).unwrap_or(1.0);
+			let factor_2 = to_unit.base_2().map(|b| b.base_factor()).unwrap_or(1.0);
+
+			val = (val / factor_1) * factor_2;
+		}
+
+		Ok(val)
 	} else {
 		Err(format!(r#"Values of type "{}" and "{}" are not able to be compaired or converted."#, from_unit.long(), to_unit.long()).into())
 	}

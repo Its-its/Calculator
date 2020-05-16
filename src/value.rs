@@ -1,6 +1,6 @@
 use std::{fmt, ops};
 
-use conversion::{Quantity, BaseUnit};
+use conversion::{Quantity, BaseUnit, Units};
 
 use crate::{Result, Error, ExprToken, Operator};
 use crate::units::convert;
@@ -9,7 +9,7 @@ use crate::units::convert;
 #[derive(Debug)]
 pub enum Value {
 	Quantity(Quantity),
-	Unit(Box<dyn BaseUnit>)
+	Unit(Units)
 }
 
 impl Value {
@@ -17,19 +17,19 @@ impl Value {
 		Value::Quantity(Quantity::new(value))
 	}
 
-	pub fn new_quantity_unit(value: f64, unit: Option<Box<dyn BaseUnit>>) -> Value {
+	pub fn new_quantity_unit(value: f64, unit: Option<Units>) -> Value {
 		Value::Quantity(Quantity::new_unit(value, unit))
 	}
 
 
-	pub fn as_base_unit(&self) -> Option<&Box<dyn BaseUnit>> {
+	pub fn as_base_unit(&self) -> Option<&Units> {
 		match self {
 			Value::Quantity(q) => q.unit(),
 			Value::Unit(u) => Some(u)
 		}
 	}
 
-	pub fn clone_base_unit(&self) -> Option<Box<dyn BaseUnit>> {
+	pub fn clone_base_unit(&self) -> Option<Units> {
 		match self {
 			Value::Quantity(q) => q.unit().cloned(),
 			Value::Unit(u) => Some(u.clone())
@@ -58,12 +58,12 @@ impl Value {
 				tokens.push(ExprToken::Number(q.amount()));
 
 				if let Some(unit) = q.into_unit() {
-					tokens.push(ExprToken::Literal(unit.short().to_owned().unwrap_or_else(|| unit.long()).to_string()));
+					tokens.push(ExprToken::Literal(unit.short()));
 				}
 			}
 
 			Value::Unit(unit) => {
-				tokens.push(ExprToken::Literal(unit.short().to_owned().unwrap_or_else(|| unit.long()).to_string()));
+				tokens.push(ExprToken::Literal(unit.short()));
 			}
 		}
 
@@ -77,7 +77,7 @@ impl Value {
 		}
 	}
 
-	pub fn into_base_unit(self) -> Option<Box<dyn BaseUnit>> {
+	pub fn into_base_unit(self) -> Option<Units> {
 		match self {
 			Value::Quantity(q) => q.into_unit(),
 			Value::Unit(u) => Some(u)
@@ -90,8 +90,8 @@ impl Value {
 			(Value::Quantity(left), Value::Quantity(right)) => {
 				let (l_amount, r_amount) = (left.amount(), right.amount());
 				let (l_name, r_name) = (
-					left.unit().map(|u| u.short().unwrap_or(u.long()).to_string()).unwrap_or_default(),
-					right.unit().map(|u| u.short().unwrap_or(u.long()).to_string()).unwrap_or_default()
+					left.unit().map(|u| u.short()).unwrap_or_default(),
+					right.unit().map(|u| u.short()).unwrap_or_default()
 				);
 
 				let value = left + right;
@@ -103,7 +103,7 @@ impl Value {
 					r_amount,
 					r_name,
 					value.amount(),
-					value.unit().map(|u| u.short().unwrap_or(u.long()).to_string()).unwrap_or_default()
+					value.unit().map(|u| u.short()).unwrap_or_default()
 				);
 
 				Ok(Value::Quantity(value))

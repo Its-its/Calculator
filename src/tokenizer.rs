@@ -72,7 +72,36 @@ impl<'a> Tokenizer<'a> {
 			}
 		}
 
-		Ok(compiled.into_iter().filter(|i| i != &ExprToken::Whitespace).collect())
+		let mut compiled = compiled.into_iter().filter(|i| i != &ExprToken::Whitespace).collect();
+
+		self.convert_multi_literals(&mut compiled);
+
+		Ok(compiled)
+	}
+
+	// Convert [Literal("Gb"), Divide, Literal("s")] -> Literal("Gb/s")
+	fn convert_multi_literals(&self, tokens: &mut Vec<ExprToken>) {
+		let mut divisions: Vec<usize> = tokens.iter()
+			.enumerate()
+			.filter(|t| t.1 == &Operator::Divide.into())
+			.map(|i| i.0)
+			.collect();
+
+		divisions.reverse();
+
+		for pos in divisions {
+			let next_item = tokens.get(pos + 1).map(|i| i.is_literal()).unwrap_or_default();
+			let prev_item = tokens.get(pos - 1).map(|i| i.is_literal()).unwrap_or_default();
+
+			if next_item && prev_item {
+				let next_item = tokens.remove(pos + 1).from_literal();
+				let prev_item = tokens.remove(pos - 1).from_literal();
+
+				tokens.push(ExprToken::Literal(format!("{}/{}", prev_item, next_item)));
+
+				tokens.swap_remove(pos - 1);
+			}
+		}
 	}
 
 	fn remove_non_essiential(&mut self) -> ParseResult {

@@ -24,7 +24,7 @@ pub use value::Value;
 fn main() -> Result<()> {
 	let mut factory  = Factory::new();
 
-	println!("Got: {}", factory.parse("1 + 1")?);
+	println!("Got: {}", factory.parse("1000 MB/s -> GB/min")?);
 
 	Ok(())
 }

@@ -1,6 +1,6 @@
 use std::ops::RangeBounds;
 
-use conversion::{Quantity, BaseUnit};
+use conversion::{Quantity, BaseUnit, Units};
 
 use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
 use crate::equations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
@@ -442,13 +442,21 @@ impl<'a> Parser<'a> {
 		Ok(None)
 	}
 
-	fn parse_unit_expression(&self, slicer: &mut TokenSlicer) -> Result<Option<Box<dyn BaseUnit>>> {
+	fn parse_unit_expression(&self, slicer: &mut TokenSlicer) -> Result<Option<Units>> {
 		if slicer.is_next_value_func(|v| v.is_literal()) {
-			let val = return_value!(slicer, ExprToken::Literal);
+			let literal_val = return_value!(slicer, ExprToken::Literal);
 
-			self.factory.find_unit(&val)
-			.map(|i| Some(i))
-			.ok_or(format!("No known unit named \"{}\"", val).into())
+			let mut units = Vec::new();
+			let mut split = literal_val.split("/");
+
+			while let Some(name) = split.next() {
+				let base_unit = self.factory.find_unit(name)
+					.ok_or(Error::Text(format!("No known unit named \"{}\"", literal_val)))?;
+
+				units.push(base_unit);
+			}
+
+			Ok(Some(Units::new_vec(units)))
 		} else {
 			Ok(None)
 		}
