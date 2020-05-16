@@ -35,26 +35,33 @@ fn main() -> Result<()> {
 mod tests {
 	use super::*;
 
+
+	macro_rules! test {
+		($factory:expr, $eval:expr, $result:expr) => {
+			assert_eq!($factory.parse($eval).unwrap(), Value::new_quantity($result));
+		};
+	}
+
 	#[test]
 	fn test_operations() {
 		let factory  = Factory::new();
 
-		assert_eq!(factory.parse("3GB - 1GB").unwrap(), Value::new_quantity(2.0));
-		assert_eq!(factory.parse("1GB + 1GB").unwrap(), Value::new_quantity(2.0));
-		assert_eq!(factory.parse("1GB * 1GB").unwrap(), Value::new_quantity(1.0));
-		assert_eq!(factory.parse("4GB / 2GB").unwrap(), Value::new_quantity(2.0));
-		assert_eq!(factory.parse("1GB == 1GB").unwrap(), Value::new_quantity(1.0));
-		assert_eq!(factory.parse("2GB > 1GB").unwrap(), Value::new_quantity(1.0));
-		assert_eq!(factory.parse("2GB >= 1GB").unwrap(), Value::new_quantity(1.0));
-		assert_eq!(factory.parse("1GB < 2GB").unwrap(), Value::new_quantity(1.0));
-		assert_eq!(factory.parse("1GB <= 2GB").unwrap(), Value::new_quantity(1.0));
+		test!(factory, "3GB - 1GB", 2.0);
+		test!(factory, "1GB + 1GB", 2.0);
+		test!(factory, "1GB * 1GB", 1.0);
+		test!(factory, "4GB / 2GB", 2.0);
+		test!(factory, "1GB == 1GB", 1.0);
+		test!(factory, "2GB > 1GB", 1.0);
+		test!(factory, "2GB >= 1GB", 1.0);
+		test!(factory, "1GB < 2GB", 1.0);
+		test!(factory, "1GB <= 2GB", 1.0);
 	}
 
 	#[test]
 	fn test_functions() {
 		let factory  = Factory::new();
 
-		assert_eq!(factory.parse("max(1.5, 10.0)").unwrap(), Value::new_quantity(10.0));
-		assert_eq!(factory.parse("max(1.5, 10.0, 30.0, 15.0)").unwrap(), Value::new_quantity(30.0));
+		test!(factory, "max(1.5, 10.0)", 10.0);
+		test!(factory, "max(1.5, 10.0, 30.0, 15.0)", 30.0);
 	}
 }
