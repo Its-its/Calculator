@@ -38,6 +38,7 @@ impl Factory {
 		.iter()
 		.find(|u| {
 			u.long() == name ||
+			u.multiple() == name ||
 			u.short().map(|i| i == name).unwrap_or_default() ||
 			u.alt().into_iter().find(|i| i == &name).is_some()
 		})

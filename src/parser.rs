@@ -84,6 +84,10 @@ impl<'a> Parser<'a> {
 
 		let mut slicer = TokenSlicer::new(self.parsed_tokens.clone());
 
+		if self.parse_neighbors(&mut slicer)? {
+			self.steps.push(slicer.tokens.clone());
+		}
+
 		loop {
 			slicer.reset_pos();
 			slicer.forward();
@@ -119,6 +123,50 @@ impl<'a> Parser<'a> {
 		}
 
 		Err("Unable to parse.".into())
+	}
+
+	fn parse_neighbors(&self, slicer: &mut TokenSlicer) -> Result<bool> {
+		let mut updated = false;
+		// [ Number(5.0), Literal("min"), Number(30.0), Literal("sec") ]
+		// [ Number(5.5), Literal("min") ]
+
+		while let Some(token) = slicer.peek() {
+			// Number, Literal
+			if token.is_literal() && slicer.peek_previous().unwrap().is_number() {
+				slicer.prev_pos();
+
+				let start_pos = slicer.get_pos();
+
+				let mut neighbors = Vec::new();
+
+				// TODO: Ensure they have the same Base Literal.
+				// Will run into issues down the road otherwise.
+
+				while let Some(expr) = self.parse_number_expression(slicer)? {
+					neighbors.push(expr.args);
+				}
+
+				if neighbors.len() < 2 {
+					continue;
+				}
+
+				updated = true;
+
+				let cmp = neighbors.into_iter()
+				.fold::<ExpressionArg, _>(Box::new(Literal::new(Value::Quantity(Quantity::new(0.0)))), |a, b| {
+					Operator::Plus.compare(a, b)
+				});
+
+				slicer.replace(start_pos..slicer.get_pos(), cmp.eval()?.into_tokens());
+
+				break;
+			}
+
+			slicer.next_pos();
+		}
+
+
+		Ok(updated)
 	}
 
 	pub fn parse_tokens(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
