@@ -132,7 +132,7 @@ impl<'a> Parser<'a> {
 
 		while let Some(token) = slicer.peek() {
 			// Number, Literal
-			if token.is_literal() && slicer.peek_previous().unwrap().is_number() {
+			if token.is_literal() && slicer.peek_previous().map(|p| p.is_number()).unwrap_or_default() {
 				slicer.prev_pos();
 
 				let start_pos = slicer.get_pos();
@@ -270,7 +270,7 @@ impl<'a> Parser<'a> {
 		print_dbg!("parse_parentheses: {} - {}", start_pos, slicer.is_reversed());
 
 		slicer.set_pos(start_pos);
-		slicer.next_pos();
+		// slicer.next_pos();
 
 		// If is reversed find the StartGrouping and continue from there.
 		if slicer.is_reversed() {
@@ -338,6 +338,11 @@ impl<'a> Parser<'a> {
 		}
 
 		let mut insides = Vec::new();
+
+		// Skip start Grouping
+		if slicer.peek().map(|e| e == &ExprToken::StartGrouping).unwrap_or_default() {
+			slicer.next_pos();
+		}
 
 		loop {
 			if let Some(item) = slicer.next() {

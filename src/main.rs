@@ -24,7 +24,7 @@ pub use value::Value;
 fn main() -> Result<()> {
 	let mut factory  = Factory::new();
 
-	println!("Got: {}", factory.parse("3min + 5min 30s - 4min")?);
+	println!("Got: {}", factory.parse("5\"")?);
 
 	Ok(())
 }

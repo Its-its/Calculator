@@ -146,7 +146,7 @@ impl<'a> Tokenizer<'a> {
 	fn parse_literal(&mut self) -> ParseResult {
 		let remains = self.get_remaining_str();
 
-		let mut builder = Regex::new(r#"^([a-zA-Z]+)"#).unwrap();
+		let mut builder = Regex::new(r#"^([^\d\s]+)"#).unwrap();
 
 		if let Some(found) = builder.find(remains) {
 			if found.end() != 0 {
