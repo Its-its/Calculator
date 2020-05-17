@@ -14,7 +14,7 @@ pub mod consts;
 pub use factory::Factory;
 pub use error::{Error, Result};
 pub use tokens::{Operator, ExprToken};
-pub use parser::Parser;
+pub use parser::{Parser, ParseValue};
 pub use tokenizer::Tokenizer;
 pub use value::Value;
 
@@ -24,7 +24,7 @@ pub use value::Value;
 fn main() -> Result<()> {
 	let mut factory  = Factory::new();
 
-	println!("Got: {}", factory.parse("5\"")?);
+	println!("Got: {}", factory.parse(r#"4x + 5x * 9z"#)?);
 
 	Ok(())
 }

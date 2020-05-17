@@ -1,3 +1,4 @@
+use std::fmt;
 use std::ops::RangeBounds;
 
 use conversion::{Quantity, BaseUnit, Units};
@@ -58,6 +59,37 @@ macro_rules! return_value {
 }
 
 
+#[derive(Debug)]
+pub enum ParseValue {
+	Single(Value),
+	Multi(Vec<ExprToken>)
+}
+
+impl ParseValue {
+	pub fn into_tokens(self) -> Vec<ExprToken> {
+		match self {
+			ParseValue::Single(v) => v.into_tokens(),
+			ParseValue::Multi(v) => v
+		}
+	}
+}
+
+impl fmt::Display for ParseValue {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			ParseValue::Single(v) => v.fmt(f),
+			ParseValue::Multi(v) => {
+				for token in v {
+					token.fmt(f)?;
+				}
+
+				Ok(())
+			}
+		}
+	}
+}
+
+
 pub struct Parser<'a> {
 	factory: &'a Factory,
 	tokenizer: Tokenizer<'a>,
@@ -77,7 +109,7 @@ impl<'a> Parser<'a> {
 		}
 	}
 
-	pub fn parse(&mut self) -> Result<Value> {
+	pub fn parse(&mut self) -> Result<ParseValue> {
 		self.parsed_tokens = self.tokenizer.parse()?;
 
 		print_dbg!("Parsed Tokens: {:?}", self.parsed_tokens);
@@ -95,15 +127,36 @@ impl<'a> Parser<'a> {
 			let current_operation = self.parse_tokens(&mut slicer)?;
 
 			// This should be what it JUST did.
-			if let Some(to_parse) = current_operation {
-				if let Some(replace_range) = to_parse.range {
-					let eval = to_parse.args.eval()?;
-					slicer.replace(replace_range.0..replace_range.1, eval.into_tokens());
+			match current_operation {
+				Some(to_parse) => {
+					if !slicer.is_finished() {
+						if let Some(replace_range) = to_parse.range {
+							let eval = to_parse.args.eval()?;
+							slicer.replace(replace_range.0..replace_range.1, eval.into_tokens());
+						}
+
+						if !slicer.tokens.is_empty() {
+							self.steps.push(slicer.tokens.clone());
+						}
+
+						print_dbg!("");
+					} else {
+						print_dbg!("");
+
+						print_dbg!("Steps:");
+						print_dbg!(" - {:?}", self.parsed_tokens.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
+						for step in self.steps.as_slice() {
+							print_dbg!(" - {:?}", step.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
+						}
+
+						return Ok(ParseValue::Single(to_parse.args.eval()?));
+					}
 				}
 
-				else if slicer.is_finished() {
+				None => {
 					print_dbg!("");
-					print_dbg!("Finished: {:?}", to_parse);
+					print_dbg!("Unable to continue parsing...");
+					print_dbg!("{:?}", slicer.tokens);
 
 					print_dbg!("Steps:");
 					print_dbg!(" - {:?}", self.parsed_tokens.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
@@ -111,18 +164,10 @@ impl<'a> Parser<'a> {
 						print_dbg!(" - {:?}", step.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					}
 
-					return Ok(to_parse.args.eval()?);
+					return Ok(ParseValue::Multi(slicer.tokens));
 				}
 			}
-
-			if !slicer.tokens.is_empty() {
-				self.steps.push(slicer.tokens.clone());
-			}
-
-			print_dbg!("");
 		}
-
-		Err("Unable to parse.".into())
 	}
 
 	fn parse_neighbors(&self, slicer: &mut TokenSlicer) -> Result<bool> {
@@ -179,47 +224,31 @@ impl<'a> Parser<'a> {
 		}
 
 		// GROUPINGS ( [ {  } ] )
-		let found_grps = slicer.find_multiple(&[ExprToken::StartGrouping, ExprToken::EndGrouping]);
-
-		if let Some(pos) = found_grps.first() {
-			return self.parse_parentheses(*pos, slicer);
+		let mut found_grps = slicer.find_multiple(&[ExprToken::StartGrouping, ExprToken::EndGrouping]).into_iter();
+		while let Some(pos) = found_grps.next() {
+			let found = self.parse_parentheses(pos, slicer)?;
+			if found.is_some() { return Ok(found); }
 		}
 
 
-		// Should be Multiple OR Divide. Whichever comes first.
-		let found_md = slicer.find_multiple(&[Operator::Multiply.into(), Operator::Divide.into()]);
-
-		if let Some(pos) = found_md.first() {
-			return self.parse_operation(*pos, slicer);
-		}
-
-		// Should be Add OR Subtract. Whichever comes first.
-		let found_pm = slicer.find_multiple(&[Operator::Plus.into(), Operator::Minus.into()]);
-
-		if let Some(pos) = found_pm.first() {
-			return self.parse_operation(*pos, slicer);
-		}
-
-		// Should be Conversion.
-		let mut found_ci = slicer.find(&Operator::ConvertInto.into());
-		if let Some(pos) = found_ci.first() {
-			return self.parse_operation(*pos, slicer);
-		}
-
-		// Should be Greater, Less, Etc. Whichever comes first.
-		let found_gl = slicer.find_multiple(&[
+		let mut found_ops = slicer.find_multiple(&[Operator::Multiply.into(), Operator::Divide.into()]);
+		found_ops.append(&mut slicer.find_multiple(&[Operator::Plus.into(), Operator::Minus.into()]));
+		found_ops.append(&mut slicer.find(&Operator::ConvertInto.into()));
+		found_ops.append(&mut slicer.find_multiple(&[
 			Operator::GreaterThan.into(),
 			Operator::GreaterThanOrEqual.into(),
 			Operator::LessThan.into(),
 			Operator::LessThanOrEqual.into(),
 			Operator::DoubleEqual.into(),
 			Operator::DoesNotEqual.into(),
-		]);
+		]));
 
-		if let Some(pos) = found_gl.first() {
-			return self.parse_operation(*pos, slicer);
+		let mut found_ops = found_ops.into_iter();
+
+		while let Some(pos) = found_ops.next() {
+			let found = self.parse_operation(pos, slicer)?;
+			if found.is_some() { return Ok(found); }
 		}
-
 
 		self.parse_finished(slicer)
 	}
@@ -417,7 +446,6 @@ impl<'a> Parser<'a> {
 		slicer.set_pos(pos - 1);
 
 		let prev = self.parse_number_expression(slicer)?;
-		let start_pos = slicer.get_pos();
 
 		slicer.forward();
 		slicer.set_pos(pos + 1);
@@ -503,8 +531,7 @@ impl<'a> Parser<'a> {
 			let mut split = literal_val.split("/");
 
 			while let Some(name) = split.next() {
-				let base_unit = self.factory.find_unit(name)
-					.ok_or(Error::Text(format!("No known unit named \"{}\"", literal_val)))?;
+				let base_unit = self.factory.find_unit(name);
 
 				units.push(base_unit);
 			}
@@ -526,7 +553,7 @@ impl<'a> Parser<'a> {
 			Some(i) => {
 				if slicer.is_finished() || slicer.tokens.len() == 1 {
 					slicer.clear();
-					Ok(Some(Expression::new(i.args)))
+					Ok(Some(i))
 				} else {
 					Err("Unable to parse remaining tokens.".into())
 				}

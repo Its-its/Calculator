@@ -1,6 +1,6 @@
 use conversion::{BaseUnit, FunctionEval};
 
-use crate::{Parser, functions, units, Value, Result};
+use crate::{Parser, ParseValue, functions, units, Value, Result};
 
 
 pub struct Factory {
@@ -21,7 +21,7 @@ impl Factory {
 		Parser::new(self, eval)
 	}
 
-	pub fn parse(&self, eval: &str) -> Result<Value> {
+	pub fn parse(&self, eval: &str) -> Result<ParseValue> {
 		self.create_parser(eval).parse()
 	}
 
@@ -33,7 +33,7 @@ impl Factory {
 		.map(|i| i.1.clone())
 	}
 
-	pub fn find_unit(&self, name: &str) -> Option<Box<dyn BaseUnit>> {
+	pub fn find_unit(&self, name: &str) -> Box<dyn BaseUnit> {
 		self.units
 		.iter()
 		.find(|u| {
@@ -43,5 +43,6 @@ impl Factory {
 			u.alt().into_iter().find(|i| i == &name).is_some()
 		})
 		.map(|i| i.clone())
+		.unwrap_or_else(|| Box::new(units::CustomUnit::new(name.to_string())))
 	}
 }

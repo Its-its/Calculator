@@ -12,6 +12,6 @@ pub mod consts;
 pub use factory::Factory;
 pub use error::{Error, Result};
 pub use tokens::{Operator, ExprToken};
-pub use parser::Parser;
+pub use parser::{Parser, ParseValue};
 pub use tokenizer::Tokenizer;
 pub use value::Value;

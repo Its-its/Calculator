@@ -72,3 +72,36 @@ pub fn convert(from: &Value, to: &Value) -> Result<f64> {
 		Err(format!(r#"Values of type "{}" and "{}" are not able to be compaired or converted."#, from_unit.long(), to_unit.long()).into())
 	}
 }
+
+
+
+#[derive(Debug, Clone)]
+pub struct CustomUnit(String);
+
+impl CustomUnit {
+	pub fn new(unit: String) -> Self {
+		CustomUnit(unit)
+	}
+}
+
+impl BaseUnit for CustomUnit {
+	fn multiple(&self) -> &str {
+		self.0.as_str()
+	}
+
+	fn long(&self) -> &str {
+		self.0.as_str()
+	}
+
+	fn short(&self) -> Option<&str> {
+		Some(self.0.as_str())
+	}
+
+	fn alt(&self) -> Vec<&str> {
+		Vec::new()
+	}
+
+	fn base_unit(&self) -> Option<&dyn BaseUnit> {
+		None
+	}
+}
