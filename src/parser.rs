@@ -4,7 +4,7 @@ use std::ops::RangeBounds;
 use conversion::{Quantity, BaseUnit, Units};
 
 use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
-use crate::equations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
+use crate::operations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
 
 #[derive(Debug)]
 pub struct Expression {

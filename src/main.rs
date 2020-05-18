@@ -17,7 +17,7 @@ pub mod tokens;
 pub mod parser;
 pub mod error;
 pub mod value;
-pub mod equations;
+pub mod operations;
 pub mod units;
 pub mod functions;
 pub mod consts;
@@ -28,6 +28,7 @@ pub use tokens::{Operator, ExprToken};
 pub use parser::{Parser, ParseValue};
 pub use tokenizer::Tokenizer;
 pub use value::Value;
+pub use operations::ExpressionArg;
 
 
 // TODO: Ability to calc hd video 2.1 million pixels/frame * 25 frams/second * 24 bits/pixel = 1.1 gigabits/second

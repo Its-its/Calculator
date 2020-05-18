@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::equations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion, Comparison};
+use crate::operations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion, Comparison};
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
