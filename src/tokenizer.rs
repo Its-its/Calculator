@@ -1,7 +1,6 @@
 use regex::Regex;
 
-use crate::{ExprToken, TokenType, Operator, Result};
-use crate::consts::{default_constants, DefaultConsts};
+use crate::{ExprToken, TokenType, Operator, Result, Factory};
 
 pub type Id<T> = (&'static str, T);
 
@@ -38,20 +37,20 @@ pub type ParseResult = Option<ExprToken>;
 
 
 pub struct Tokenizer<'a> {
+	pub factory: &'a Factory,
 	pub compiled: Vec<ExprToken>,
-	pub consts: DefaultConsts<'a>,
 
 	value: &'a str,
 	pos: usize
 }
 
 impl<'a> Tokenizer<'a> {
-	pub fn new(value: &'a str) -> Self {
+	pub fn new(value: &'a str, factory: &'a Factory) -> Self {
 		Tokenizer {
+			factory,
 			value,
 			pos: 0,
-			consts: default_constants(),
-			compiled: Vec::new()
+			compiled: Vec::new(),
 		}
 	}
 
@@ -132,8 +131,8 @@ impl<'a> Tokenizer<'a> {
 				self.consume_amount(found.end());
 
 				// Check if it's a const.
-				if let Some(item) = self.consts.iter().find(|i| i.0 == value.as_str()) {
-					Some(ExprToken::Number(item.1))
+				if let Some(item) = self.factory.find_const(value.as_str()) {
+					Some(ExprToken::Number(item))
 				} else {
 					Some(ExprToken::Literal(value))
 				}

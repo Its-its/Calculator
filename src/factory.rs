@@ -1,18 +1,20 @@
 use conversion::{BaseUnit, FunctionEval};
 
-use crate::{Parser, ParseValue, functions, units, Value, Result};
+use crate::{Parser, ParseValue, functions, units, consts, Value, Result};
 
 
 pub struct Factory {
 	functions: Vec<(String, Box<dyn FunctionEval>)>,
-	units: Vec<Box<dyn BaseUnit>>
+	units: Vec<Box<dyn BaseUnit>>,
+	consts: Vec<(String, f64)>
 }
 
 impl Factory {
 	pub fn new() -> Self {
 		Self {
 			functions: functions::default_functions().into_iter().map(|f| (f.0.to_string(), f.1)).collect(),
-			units: units::default_units()
+			consts: consts::default_constants().into_iter().map(|f| (f.0.to_string(), f.1)).collect(),
+			units: units::default_units(),
 		}
 	}
 
@@ -23,6 +25,14 @@ impl Factory {
 
 	pub fn parse(&self, eval: &str) -> Result<ParseValue> {
 		self.create_parser(eval).parse()
+	}
+
+
+	pub fn find_const(&self, name: &str) -> Option<f64> {
+		self.consts
+		.iter()
+		.find(|u| u.0 == name)
+		.map(|i| i.1)
 	}
 
 

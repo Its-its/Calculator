@@ -84,7 +84,6 @@ impl fmt::Display for ParseValue {
 pub struct Parser<'a> {
 	factory: &'a Factory,
 	tokenizer: Tokenizer<'a>,
-	eval: &'a str,
 	pub steps: Vec<Vec<ExprToken>>
 }
 
@@ -92,9 +91,8 @@ impl<'a> Parser<'a> {
 	pub fn new(factory: &'a Factory, eval: &'a str) -> Self {
 		Parser {
 			factory,
-			eval,
 			steps: Vec::new(),
-			tokenizer: Tokenizer::new(eval),
+			tokenizer: Tokenizer::new(eval, factory),
 		}
 	}
 
