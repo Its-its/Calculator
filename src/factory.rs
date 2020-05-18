@@ -36,13 +36,15 @@ impl Factory {
 	pub fn find_unit(&self, name: &str) -> Box<dyn BaseUnit> {
 		self.units
 		.iter()
-		.find(|u| {
-			u.long() == name ||
-			u.multiple() == name ||
-			u.short().map(|i| i == name).unwrap_or_default() ||
-			u.alt().into_iter().find(|i| i == &name).is_some()
-		})
+		.find(|u| u.as_ref() == &name)
 		.map(|i| i.clone())
 		.unwrap_or_else(|| Box::new(units::CustomUnit::new(name.to_string())))
+	}
+
+	pub fn is_custom_unit(&self, name: &str) -> bool {
+		self.units
+		.iter()
+		.find(|u| u.as_ref() == &name)
+		.is_none()
 	}
 }
