@@ -449,6 +449,13 @@ impl<'a> Parser<'a> {
 		let prev = prev.ok_or(Error::InputEmpty)?;
 		let next = next.ok_or(Error::InputEmpty)?;
 
+
+		// Ensure they have same unit
+		if !crate::units::can_operate(&prev.args, &next.args) {
+			return Ok(None);
+		}
+
+
 		let start_pos = prev.range.unwrap().0;
 
 		let expr = operator.compare(
@@ -546,10 +553,11 @@ impl<'a> Parser<'a> {
 					slicer.clear();
 					Ok(Some(i))
 				} else {
-					Err("Unable to parse remaining tokens.".into())
+					slicer.reset_pos();
+					Ok(None)
 				}
 			},
-			None => Err("Unable to parse current tokens.".into())
+			None => Ok(None)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 
 use crate::{Value, Result, Error};
 use conversion::units::*;
-
+use crate::operations::ExpressionArg;
 
 pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 	vec![
@@ -42,6 +42,20 @@ pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 		Box::new(ZettaByte),
 		Box::new(YottaByte)
 	]
+}
+
+
+pub fn can_operate(one: &ExpressionArg, two: &ExpressionArg) -> bool {
+	let eval_1 = one.eval().unwrap();
+	let eval_2 = two.eval().unwrap();
+
+	match (eval_1.into_base_unit(), eval_2.into_base_unit()) {
+		(Some(_), None) |
+		(None, Some(_)) |
+		(None, None) => true,
+
+		(Some(u1), Some(u2)) => u1 == u2
+	}
 }
 
 
@@ -101,7 +115,7 @@ impl BaseUnit for CustomUnit {
 		Vec::new()
 	}
 
-	fn base_unit(&self) -> Option<&dyn BaseUnit> {
-		None
+	fn base_unit(&self) -> &dyn BaseUnit {
+		self
 	}
 }
