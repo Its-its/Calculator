@@ -1,3 +1,14 @@
+pub static DEBUG_MODE: bool = false;
+
+
+#[macro_use]
+macro_rules! print_dbg {
+	() => ();
+	($($arg:tt)*) => ();
+}
+
+
+
 pub mod factory;
 pub mod tokenizer;
 pub mod tokens;

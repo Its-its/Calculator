@@ -1,5 +1,16 @@
 // https://en.wikipedia.org/wiki/List_of_equations
 
+
+pub static DEBUG_MODE: bool = true;
+
+
+#[macro_use]
+macro_rules! print_dbg {
+	() => (if crate::DEBUG_MODE { println!(); });
+	($($arg:tt)*) => (if crate::DEBUG_MODE { println!($($arg)*); });
+}
+
+
 pub mod factory;
 pub mod tokenizer;
 pub mod tokens;

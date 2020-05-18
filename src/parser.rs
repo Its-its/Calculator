@@ -6,9 +6,6 @@ use conversion::{Quantity, BaseUnit, Units};
 use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
 use crate::equations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
 
-pub static DEBUG_MODE: bool = true;
-
-
 #[derive(Debug)]
 pub struct Expression {
 	pub args: ExpressionArg,
@@ -41,12 +38,6 @@ impl From<ExpressionArg> for Expression {
 }
 
 pub type ExpressionResult<'a> = Result<Option<Expression>>;
-
-#[macro_use]
-macro_rules! print_dbg {
-	() => (if DEBUG_MODE { println!(); });
-	($($arg:tt)*) => (if DEBUG_MODE { println!($($arg)*); });
-}
 
 
 macro_rules! return_value {
@@ -377,7 +368,7 @@ impl<'a> Parser<'a> {
 			if let Some(item) = slicer.next() {
 				// Inner grouping?
 				if item == ExprToken::StartGrouping {
-					if DEBUG_MODE {
+					if crate::DEBUG_MODE {
 						print_dbg!(" - Inner: {}", insides.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					}
 
@@ -385,7 +376,7 @@ impl<'a> Parser<'a> {
 				}
 
 				if item == ExprToken::EndGrouping {
-					if DEBUG_MODE {
+					if crate::DEBUG_MODE {
 						print_dbg!(" - Inner: {}", insides.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					}
 
@@ -426,7 +417,7 @@ impl<'a> Parser<'a> {
 
 				}
 
-				if DEBUG_MODE {
+				if crate::DEBUG_MODE {
 					insides.push(item.clone());
 				}
 			} else {
