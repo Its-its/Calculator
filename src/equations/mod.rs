@@ -1,3 +1,5 @@
+// https://en.wikipedia.org/wiki/List_of_equations
+
 // Folder will be used for attempting to solve Equations with Custom Units.
 // More Examples: http://www.sosmath.com/algebra/solve/solve0/solve0.html
 

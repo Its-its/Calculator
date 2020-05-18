@@ -1,6 +1,3 @@
-// https://en.wikipedia.org/wiki/List_of_equations
-
-
 pub static DEBUG_MODE: bool = true;
 
 
