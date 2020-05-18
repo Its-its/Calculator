@@ -290,7 +290,15 @@ impl fmt::Display for Units {
 
 impl PartialEq for Units {
 	fn eq(&self, other: &Units) -> bool {
-		self.total_factor() == other.total_factor()
+		if self.base() == other.base() {
+			match (self.base_2(), other.base_2()) {
+				(Some(u1), Some(u2)) => u1 == u2,
+				(None, None) => true,
+				_ => false
+			}
+		} else {
+			false
+		}
 	}
 }
 

@@ -68,8 +68,8 @@ macro_rules! create_non_standard_unit {
 				$factor
 			}
 
-			fn base_unit(&self) -> Option<&dyn BaseUnit> {
-				Some(&$baseUnit)
+			fn base_unit(&self) -> &dyn BaseUnit {
+				$baseUnit.base_unit()
 			}
 		}
 	};
@@ -110,8 +110,8 @@ macro_rules! create_standard_unit {
 				vec![$($alts),*]
 			}
 
-			fn base_unit(&self) -> Option<&dyn BaseUnit> {
-				None
+			fn base_unit(&self) -> &dyn BaseUnit {
+				self
 			}
 		}
 	};
@@ -136,7 +136,7 @@ impl Clone for Box<dyn BaseUnit> {
 }
 
 
-pub trait BaseUnit: std::fmt::Debug + CloneBaseUnit {
+pub trait BaseUnit: fmt::Debug + CloneBaseUnit {
 	/// Display name for multiple units.
 	fn multiple(&self) -> &str;
 	/// Display name for singular unit.
@@ -149,28 +149,17 @@ pub trait BaseUnit: std::fmt::Debug + CloneBaseUnit {
 		1.0
 	}
 
-	fn base_unit(&self) -> Option<&dyn BaseUnit> {
-		None
-	}
-
-	fn can_convert_to(&self, unit: &dyn BaseUnit) -> bool {
-		if self.base_long() == unit.base_long() {
-			true
-		} else {
-			false
-		}
-	}
+	fn base_unit(&self) -> &dyn BaseUnit;
 
 	fn base_long(&self) -> &str {
-		self.base_unit()
-		.map(|u| u.base_long())
-		.unwrap_or(self.long())
+		self.base_unit().long()
 	}
 }
 
+// Simple check to see if the base long name == other long name.
 impl PartialEq for dyn BaseUnit {
 	fn eq(&self, other: &dyn BaseUnit) -> bool {
-		self.base_factor() == other.base_factor()
+		self.base_long() == other.base_long()
 	}
 }
 
@@ -217,9 +206,7 @@ pub fn is_convertable(from: &Units, to: &Units) -> bool {
 	let from_base = from.base();
 	let to_base = to.base();
 
-	if !from_base.base_unit()
-		.unwrap_or(from_base.as_ref())
-		.can_convert_to(to_base.as_ref()) {
+	if from_base != to_base {
 		return false;
 	}
 
@@ -227,12 +214,7 @@ pub fn is_convertable(from: &Units, to: &Units) -> bool {
 	let to_base = to.base_2();
 
 	match (from_base, to_base) {
-		(Some(from), Some(to)) => {
-			from.base_unit()
-				.unwrap_or(from.as_ref())
-				.can_convert_to(to.as_ref())
-		}
-
+		(Some(from), Some(to)) => from == to,
 		_ => true
 	}
 }
