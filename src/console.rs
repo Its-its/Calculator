@@ -94,7 +94,7 @@ pub fn display_parsed(eval: &str) {
 
 pub fn help_command() {
 	let mul_1 = Tokenizer::new("2014 / 2 * 5").parse().unwrap();
-	let min_sec = Tokenizer::new("5 min + 30s").parse().unwrap();
+	let min_sec = Tokenizer::new("5 min 30 s").parse().unwrap();
 	let wrapped = Tokenizer::new("5 * (10 / 2)").parse().unwrap();
 
 	let rows = &[

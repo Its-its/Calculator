@@ -47,11 +47,12 @@ impl<'a> LineDisplay for Line<'a> {
 			value.set_inner_text(&format!("{}", token));
 
 			match token {
-				ExprToken::Literal(_) => {value.class_list().add_1("literal");},
-				ExprToken::Number(_) => {value.class_list().add_1("amount");},
-				ExprToken::Operator(_) => {value.class_list().add_1("operator");},
-				_ => {}
-			}
+				ExprToken::Literal(_) => value.class_list().add_1("literal"),
+				ExprToken::Number(_) => value.class_list().add_1("amount"),
+				ExprToken::Operator(_) => value.class_list().add_1("operator"),
+				ExprToken::StartGrouping | ExprToken::EndGrouping => value.class_list().add_1("grouping"),
+				_ => Ok(())
+			};
 
 			container.append_child(&value);
 		}

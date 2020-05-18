@@ -75,7 +75,8 @@ input {
 /* VALUES */
 .amount,
 .operator,
-.literal {
+.literal,
+.grouping {
 	margin-right: 3px;
 }
 
@@ -88,4 +89,8 @@ input {
 
 .literal {
 	color: #ea9700;
+}
+
+.grouping {
+	color: #00b3ea;
 }
