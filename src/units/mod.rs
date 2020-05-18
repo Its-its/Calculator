@@ -156,6 +156,15 @@ pub trait BaseUnit: fmt::Debug + CloneBaseUnit {
 	}
 }
 
+impl PartialEq<&str> for dyn BaseUnit {
+	fn eq(&self, other: &&str) -> bool {
+		self.long() == *other ||
+		self.multiple() == *other ||
+		self.short().map(|i| i == *other).unwrap_or_default() ||
+		self.alt().into_iter().find(|i| i == other).is_some()
+	}
+}
+
 // Simple check to see if the base long name == other long name.
 impl PartialEq for dyn BaseUnit {
 	fn eq(&self, other: &dyn BaseUnit) -> bool {
