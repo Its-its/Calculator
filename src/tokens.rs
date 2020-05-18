@@ -3,6 +3,46 @@ use std::fmt;
 use crate::operations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion, Comparison};
 
 
+#[derive(Debug, PartialEq)]
+pub enum TokenType {
+	Comma,
+	Whitespace,
+	StartGrouping,
+	EndGrouping,
+
+	Number,
+	Operator,
+	Literal,
+
+	ExactOperator(Operator)
+}
+
+impl PartialEq<ExprToken> for TokenType {
+	fn eq(&self, other: &ExprToken) -> bool {
+		match (self, other) {
+			(Self::Comma, ExprToken::Comma) |
+			(Self::Whitespace, ExprToken::Whitespace) |
+			(Self::StartGrouping, ExprToken::StartGrouping) |
+			(Self::EndGrouping, ExprToken::EndGrouping) |
+
+			(Self::Number, ExprToken::Number(_)) |
+			(Self::Operator, ExprToken::Operator(_)) |
+			(Self::Literal, ExprToken::Literal(_)) => true,
+
+			(Self::ExactOperator(o1), ExprToken::Operator(o2)) => o1 == o2,
+
+			_ => false
+		}
+	}
+}
+
+impl Into<TokenType> for Operator {
+	fn into(self) -> TokenType {
+		TokenType::ExactOperator(self)
+	}
+}
+
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Operator {
 	Plus,

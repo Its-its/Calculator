@@ -70,11 +70,11 @@ pub fn convert(from: &Value, to: &Value) -> Result<f64> {
 	if is_convertable(from_unit, to_unit) {
 		let mut val = from.amount().unwrap();
 
-		if !from_unit.is_base_equal(to_unit) {
+		if from_unit.is_base_equal(to_unit) {
 			val = val * from_unit.base().base_factor() / to_unit.base().base_factor();
 		}
 
-		if !from_unit.is_base_2_equal(to_unit) {
+		if from_unit.is_base_2_equal(to_unit) {
 			let factor_1 = from_unit.base_2().map(|b| b.base_factor()).unwrap_or(1.0);
 			let factor_2 = to_unit.base_2().map(|b| b.base_factor()).unwrap_or(1.0);
 

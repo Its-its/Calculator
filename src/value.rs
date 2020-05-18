@@ -36,6 +36,13 @@ impl Value {
 		}
 	}
 
+	pub fn base_factor(&self) -> f64 {
+		match self {
+			Value::Quantity(q) => q.unit().map(|u| u.base().base_factor()).unwrap_or(1.0),
+			Value::Unit(u) => u.base().base_factor()
+		}
+	}
+
 	pub fn amount(&self) -> Option<f64> {
 		match self {
 			Value::Quantity(q) => Some(q.amount()),
@@ -180,7 +187,7 @@ impl Value {
 
 		let value = convert(&left, &right)?;
 
-		println!("Con: {} -> {} = {}", l_amount.unwrap_or_default(), r_amount.unwrap_or_default(), value);
+		println!("Con: {}(f {}) -> {}(f {}) = {}", l_amount.unwrap_or_default(), left.base_factor(), r_amount.unwrap_or_default(), right.base_factor(), value);
 
 		Ok(Value::Quantity(Quantity::new_unit(value, unit)))
 	}

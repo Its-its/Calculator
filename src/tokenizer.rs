@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::{ExprToken, Operator, Result};
+use crate::{ExprToken, TokenType, Operator, Result};
 use crate::consts::{default_constants, DefaultConsts};
 
 pub type Id<T> = (&'static str, T);
@@ -38,7 +38,9 @@ pub type ParseResult = Option<ExprToken>;
 
 
 pub struct Tokenizer<'a> {
-	consts: DefaultConsts<'a>,
+	pub compiled: Vec<ExprToken>,
+	pub consts: DefaultConsts<'a>,
+
 	value: &'a str,
 	pos: usize
 }
@@ -48,11 +50,12 @@ impl<'a> Tokenizer<'a> {
 		Tokenizer {
 			value,
 			pos: 0,
-			consts: default_constants()
+			consts: default_constants(),
+			compiled: Vec::new()
 		}
 	}
 
-	pub fn parse(&mut self) -> Result<Vec<ExprToken>> {
+	pub fn parse(&mut self) -> Result<&Vec<ExprToken>> {
 		let mut compiled = Vec::new();
 
 		while !self.is_finished() {
@@ -72,37 +75,11 @@ impl<'a> Tokenizer<'a> {
 			}
 		}
 
-		let mut compiled = compiled.into_iter().filter(|i| i != &ExprToken::Whitespace).collect();
+		self.compiled = compiled.into_iter().filter(|i| i != &ExprToken::Whitespace).collect();
 
-		self.convert_multi_literals(&mut compiled);
-
-		Ok(compiled)
+		Ok(&self.compiled)
 	}
 
-	// Convert [Literal("Gb"), Divide, Literal("s")] -> Literal("Gb/s")
-	fn convert_multi_literals(&self, tokens: &mut Vec<ExprToken>) {
-		let mut divisions: Vec<usize> = tokens.iter()
-			.enumerate()
-			.filter(|t| t.1 == &Operator::Divide.into())
-			.map(|i| i.0)
-			.collect();
-
-		divisions.reverse();
-
-		for pos in divisions {
-			let next_item = tokens.get(pos + 1).map(|i| i.is_literal()).unwrap_or_default();
-			let prev_item = tokens.get(pos - 1).map(|i| i.is_literal()).unwrap_or_default();
-
-			if next_item && prev_item {
-				let next_item = tokens.remove(pos + 1).from_literal();
-				let prev_item = tokens.remove(pos - 1).from_literal();
-
-				tokens.push(ExprToken::Literal(format!("{}/{}", prev_item, next_item)));
-
-				tokens.swap_remove(pos - 1);
-			}
-		}
-	}
 
 	fn remove_non_essiential(&mut self) -> ParseResult {
 		if self.consume_if(" ") {
@@ -202,7 +179,50 @@ impl<'a> Tokenizer<'a> {
 		self.pos += value;
 	}
 
-	fn is_finished(&self) -> bool {
+	pub fn is_finished(&self) -> bool {
 		self.value.len() <= self.pos
 	}
+
+	/// Will find matching tokens starting index.
+	pub fn find_tokens_index<'b>(&'b self, tokens: &'b [TokenType]) -> impl Iterator<Item = (usize, usize)> + 'b {
+		let initial_state = Found {
+			start: 0,
+			end: 0,
+			step: 0,
+			pass: false
+		};
+
+		self.compiled.iter()
+		.enumerate()
+		.scan(initial_state, move |state, (pos, token)| {
+			if state.pass || state.step == 0 {
+				state.pass = false;
+				state.start = pos;
+				state.end = 0;
+				state.step = 0;
+			}
+
+			if &tokens[state.step] == token {
+				state.step += 1;
+			} else {
+				state.step = 0;
+			}
+
+			if tokens.len() == state.step {
+				state.pass = true;
+				state.end = pos;
+			}
+
+			Some((state.pass, state.start, state.end))
+		})
+		.filter(|s| s.0)
+		.map(|s| (s.1, s.2))
+	}
+}
+
+struct Found {
+	start: usize, // Start pos
+	end: usize, // Finished pos.
+	step: usize, // Current token step.
+	pass: bool // Should pass filter.
 }

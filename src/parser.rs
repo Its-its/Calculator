@@ -85,7 +85,6 @@ pub struct Parser<'a> {
 	factory: &'a Factory,
 	tokenizer: Tokenizer<'a>,
 	eval: &'a str,
-	pub parsed_tokens: Vec<ExprToken>,
 	pub steps: Vec<Vec<ExprToken>>
 }
 
@@ -95,17 +94,20 @@ impl<'a> Parser<'a> {
 			factory,
 			eval,
 			steps: Vec::new(),
-			parsed_tokens: Vec::new(),
 			tokenizer: Tokenizer::new(eval),
 		}
 	}
 
+	pub fn get_parsed_tokens(&self) -> &Vec<ExprToken> {
+		&self.tokenizer.compiled
+	}
+
 	pub fn parse(&mut self) -> Result<ParseValue> {
-		self.parsed_tokens = self.tokenizer.parse()?;
+		let _ = self.tokenizer.parse()?;
 
-		print_dbg!("Parsed Tokens: {:?}", self.parsed_tokens);
+		print_dbg!("Parsed Tokens: {:?}", self.get_parsed_tokens());
 
-		let mut slicer = TokenSlicer::new(self.parsed_tokens.clone());
+		let mut slicer = TokenSlicer::new(self.get_parsed_tokens().clone());
 
 		if self.parse_neighbors(&mut slicer)? {
 			self.steps.push(slicer.tokens.clone());
@@ -135,7 +137,7 @@ impl<'a> Parser<'a> {
 						print_dbg!("");
 
 						print_dbg!("Steps:");
-						print_dbg!(" - {:?}", self.parsed_tokens.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
+						print_dbg!(" - {:?}", self.get_parsed_tokens().iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 						for step in self.steps.as_slice() {
 							print_dbg!(" - {:?}", step.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 						}
@@ -150,7 +152,7 @@ impl<'a> Parser<'a> {
 					print_dbg!("{:?}", slicer.tokens);
 
 					print_dbg!("Steps:");
-					print_dbg!(" - {:?}", self.parsed_tokens.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
+					print_dbg!(" - {:?}", self.get_parsed_tokens().iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					for step in self.steps.as_slice() {
 						print_dbg!(" - {:?}", step.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					}
