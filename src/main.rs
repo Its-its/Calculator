@@ -34,7 +34,7 @@ pub use operations::ExpressionArg;
 fn main() -> Result<()> {
 	let mut factory  = Factory::new();
 
-	println!("Got: {}", factory.parse(r#"200 - 100 - 10%"#)?);
+	println!("Got: {}", factory.parse(r#"300 - 100 - 40%"#)?);
 
 	Ok(())
 }

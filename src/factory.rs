@@ -64,7 +64,7 @@ impl Factory {
 	pub fn find_unit(&self, name: &str) -> Box<dyn BaseUnit> {
 		self.units
 		.iter()
-		.find(|u| u.as_ref() == &name)
+		.find(|u| u == &name)
 		.map(|i| i.clone())
 		.unwrap_or_else(|| Box::new(units::CustomUnit::new(name.to_string())))
 	}
@@ -72,7 +72,7 @@ impl Factory {
 	pub fn is_custom_unit(&self, name: &str) -> bool {
 		self.units
 		.iter()
-		.find(|u| u.as_ref() == &name)
+		.find(|u| u == &name)
 		.is_none()
 	}
 }

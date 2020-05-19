@@ -38,7 +38,7 @@ pub type ParseResult = Option<ExprToken>;
 
 pub struct Tokenizer<'a> {
 	pub factory: &'a Factory,
-	pub compiled: Vec<ExprToken>,
+	compiled: Vec<ExprToken>,
 
 	value: &'a str,
 	pos: usize
@@ -52,6 +52,10 @@ impl<'a> Tokenizer<'a> {
 			pos: 0,
 			compiled: Vec::new(),
 		}
+	}
+
+	pub fn get_compiled(&self) -> &[ExprToken] {
+		self.compiled.as_ref()
 	}
 
 	pub fn parse(&mut self) -> Result<()> {

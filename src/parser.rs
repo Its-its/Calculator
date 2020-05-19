@@ -104,8 +104,8 @@ impl<'a> Parser<'a> {
 		}
 	}
 
-	pub fn get_parsed_tokens(&self) -> &Vec<ExprToken> {
-		&self.tokenizer.compiled
+	pub fn get_parsed_tokens(&self) -> &[ExprToken] {
+		self.tokenizer.get_compiled()
 	}
 
 	pub fn parse(&mut self) -> Result<ParseValue> {
@@ -113,7 +113,7 @@ impl<'a> Parser<'a> {
 
 		print_dbg!("Parsed Tokens: {:?}", self.get_parsed_tokens());
 
-		let mut slicer = TokenSlicer::new(self.get_parsed_tokens().clone());
+		let mut slicer = TokenSlicer::new(self.get_parsed_tokens().to_vec());
 
 		if self.parse_neighbors(&mut slicer)? {
 			self.steps.push(slicer.tokens.clone());
@@ -506,7 +506,20 @@ impl<'a> Parser<'a> {
 		} else {
 			if slicer.is_next_value_func(|v| v.is_number()) {
 				let value = return_value!(slicer, ExprToken::Number);
-				let unit = self.parse_unit_expression(slicer)?;
+				let mut unit = self.parse_unit_expression(slicer)?;
+
+				if unit.is_none() {
+					// Account for Percentage:
+					//  - 10 - 10%
+					//  - [Number(10), Minus, Number(10), Division]
+					//  - 9
+					// Change Division into a Unit. Check for unit when operating.
+					// Checks for Division. Then checks to see if token after it is a operator or doesn't exist.
+					if slicer.is_next_value(&Operator::Division.into()) && slicer.get(slicer.get_pos() + 1).map(|t| t.is_operator()).unwrap_or(true) {
+						slicer.next_pos();
+						unit = Some(Units::new(self.factory.find_unit("%")));
+					}
+				}
 
 				return Ok(Some(
 					Expression::new_range(
