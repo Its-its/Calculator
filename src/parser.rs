@@ -402,7 +402,7 @@ impl<'a> Parser<'a> {
 					// 	slicer.replace(start_pos + 1..end_pos - 1, group_slicer.tokens);
 					// }
 
-					// slicer.reset_pos();
+					slicer.reset_pos();
 
 					if let Some(mut expr) = parsed {
 						if let Some(range) = expr.range.as_mut() {
