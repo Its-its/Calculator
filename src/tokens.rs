@@ -14,7 +14,9 @@ pub enum TokenType {
 	Operator,
 	Literal,
 
-	ExactOperator(Operator)
+	ExactOperator(Operator),
+	ExactLiteral(String),
+	ExactNumber(f64)
 }
 
 impl PartialEq<ExprToken> for TokenType {
@@ -30,6 +32,8 @@ impl PartialEq<ExprToken> for TokenType {
 			(Self::Literal, ExprToken::Literal(_)) => true,
 
 			(Self::ExactOperator(o1), ExprToken::Operator(o2)) => o1 == o2,
+			(Self::ExactLiteral(o1), ExprToken::Literal(o2)) => o1 == o2,
+			(Self::ExactNumber(o1), ExprToken::Number(o2)) => o1 == o2,
 
 			_ => false
 		}
