@@ -156,7 +156,16 @@ pub trait BaseUnit: fmt::Debug + CloneBaseUnit {
 	}
 }
 
-impl PartialEq<&str> for dyn BaseUnit {
+impl PartialEq<&str> for &Box<dyn BaseUnit> {
+	fn eq(&self, other: &&str) -> bool {
+		self.long() == *other ||
+		self.multiple() == *other ||
+		self.short().map(|i| i == *other).unwrap_or_default() ||
+		self.alt().into_iter().find(|i| i == other).is_some()
+	}
+}
+
+impl PartialEq<&str> for &dyn BaseUnit {
 	fn eq(&self, other: &&str) -> bool {
 		self.long() == *other ||
 		self.multiple() == *other ||

@@ -85,6 +85,10 @@ impl Quantity {
 		self.1
 	}
 
+	pub fn remove_units(&mut self) {
+		self.1 = None;
+	}
+
 
 	pub fn this_or_that_fn<F: Fn(f64, f64) -> bool>(self, other: Self, func: F) -> Self {
 		if func(self.total_amount(), other.total_amount()) {
@@ -117,12 +121,19 @@ impl fmt::Display for Quantity {
 impl ops::Add for Quantity {
 	type Output = Quantity;
 
-	fn add(self, other: Quantity) -> Self::Output {
+	fn add(self, mut other: Quantity) -> Self::Output {
 		// TODO: New Quantity should use nearest unit.
 		// - 900GB + 200GB = 1.1TB
 		// - 1h - 30m = 30m
 
-		let total_amount = self.total_amount() + other.total_amount();
+		let total_amount = if other.unit().map(|u| u.base() == "%").unwrap_or_default() {
+			// 200 + 20% = 240
+			other.remove_units();
+
+			self.total_amount() + (self.total_amount() * (other.total_amount() / 100.0))
+		} else {
+			self.total_amount() + other.total_amount()
+		};
 
 		// Return Largest Unit.
 		let unit = return_unit(
@@ -138,16 +149,39 @@ impl ops::Add for Quantity {
 impl ops::Sub for Quantity {
 	type Output = Quantity;
 
-	fn sub(self, other: Quantity) -> Self::Output {
-		Quantity::new_unit(self.amount() - other.amount(), self.1)
+	fn sub(self, mut other: Quantity) -> Self::Output {
+		let total_amount = if other.unit().map(|u| u.base() == "%").unwrap_or_default() {
+			// 200 - 20% = 160
+			other.remove_units();
+
+			self.total_amount() - (self.total_amount() * (other.total_amount() / 100.0))
+		} else {
+			self.total_amount() - other.total_amount()
+		};
+
+		// Return Largest Unit.
+		let unit = return_unit(
+			self.into_unit(),
+			other.into_unit(),
+			|v1, v2| std::cmp::max(v1, v2)
+		);
+
+		Quantity::new_from_base_unit(total_amount, unit)
 	}
 }
 
 impl ops::Mul for Quantity {
 	type Output = Quantity;
 
-	fn mul(self, other: Quantity) -> Self::Output {
-		let total_amount = self.total_amount() * other.total_amount();
+	fn mul(self, mut other: Quantity) -> Self::Output {
+		let total_amount = if other.unit().map(|u| u.base() == "%").unwrap_or_default() {
+			// 200 * 20% = 8,000
+			other.remove_units();
+
+			self.total_amount() * (self.total_amount() * (other.total_amount() / 100.0))
+		} else {
+			self.total_amount() * other.total_amount()
+		};
 
 		// Return Largest Unit.
 		let unit = return_unit(
@@ -163,8 +197,24 @@ impl ops::Mul for Quantity {
 impl ops::Div for Quantity {
 	type Output = Quantity;
 
-	fn div(self, other: Quantity) -> Self::Output {
-		Quantity::new_unit(self.amount() / other.amount(), self.1)
+	fn div(self, mut other: Quantity) -> Self::Output {
+		let total_amount = if other.unit().map(|u| u.base() == "%").unwrap_or_default() {
+			// 200 / 20% = 5
+			other.remove_units();
+
+			self.total_amount() / (self.total_amount() * (other.total_amount() / 100.0))
+		} else {
+			self.total_amount() / other.total_amount()
+		};
+
+		// Return Largest Unit.
+		let unit = return_unit(
+			self.into_unit(),
+			other.into_unit(),
+			|v1, v2| std::cmp::max(v1, v2)
+		);
+
+		Quantity::new_from_base_unit(total_amount, unit)
 	}
 }
 
