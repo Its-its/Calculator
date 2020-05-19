@@ -54,7 +54,7 @@ impl<'a> Tokenizer<'a> {
 		}
 	}
 
-	pub fn parse(&mut self) -> Result<&Vec<ExprToken>> {
+	pub fn parse(&mut self) -> Result<()> {
 		let mut compiled = Vec::new();
 
 		while !self.is_finished() {
@@ -76,7 +76,7 @@ impl<'a> Tokenizer<'a> {
 
 		self.compiled = compiled.into_iter().filter(|i| i != &ExprToken::Whitespace).collect();
 
-		Ok(&self.compiled)
+		Ok(())
 	}
 
 
@@ -180,6 +180,12 @@ impl<'a> Tokenizer<'a> {
 
 	pub fn is_finished(&self) -> bool {
 		self.value.len() <= self.pos
+	}
+
+
+	pub fn find_tokens<'b>(&'b self, tokens: &'b [TokenType]) -> impl Iterator<Item = &[ExprToken]> + 'b {
+		self.find_tokens_index(tokens)
+			.map(move |(start, end)| self.compiled.get(start..=end).unwrap())
 	}
 
 	/// Will find matching tokens starting index.

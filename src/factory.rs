@@ -28,6 +28,24 @@ impl Factory {
 	}
 
 
+	pub fn add_constant(&mut self, name: String, value: f64) {
+		self.consts.push((name, value));
+	}
+
+
+	pub fn get_functions(&self) -> &[(String, Box<dyn FunctionEval>)] {
+		self.functions.as_slice()
+	}
+
+	pub fn get_constants(&self) -> &[(String, f64)] {
+		self.consts.as_slice()
+	}
+
+	pub fn get_units(&self) -> &[Box<dyn BaseUnit>] {
+		self.units.as_slice()
+	}
+
+
 	pub fn find_const(&self, name: &str) -> Option<f64> {
 		self.consts
 		.iter()

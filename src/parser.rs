@@ -96,12 +96,20 @@ impl<'a> Parser<'a> {
 		}
 	}
 
+	pub fn new_with_tokenizer(factory: &'a Factory, tokenizer: Tokenizer<'a>, eval: &'a str) -> Self {
+		Parser {
+			factory,
+			tokenizer,
+			steps: Vec::new(),
+		}
+	}
+
 	pub fn get_parsed_tokens(&self) -> &Vec<ExprToken> {
 		&self.tokenizer.compiled
 	}
 
 	pub fn parse(&mut self) -> Result<ParseValue> {
-		let _ = self.tokenizer.parse()?;
+		self.tokenizer.parse()?;
 
 		print_dbg!("Parsed Tokens: {:?}", self.get_parsed_tokens());
 
