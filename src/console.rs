@@ -67,8 +67,8 @@ pub fn display_parsed(eval: &str) {
 		Ok(v) => {
 			// Steps
 			log!("Steps:");
-			log!(" - {:?}", parser.parsed_tokens.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(""));
-			for step in parser.steps {
+			log!(" - {:?}", parser.get_parsed_tokens().iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(""));
+			for step in parser.steps.as_slice() {
 				log!(" - {:?}", step.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(""));
 			}
 
@@ -80,7 +80,7 @@ pub fn display_parsed(eval: &str) {
 			log!("Value Tokens: {:?}", tokens);
 
 
-			let mut full = parser.parsed_tokens.clone();
+			let mut full = parser.get_parsed_tokens().to_vec();
 			full.push(Operator::Equal.into());
 			full.append(&mut tokens);
 
@@ -93,13 +93,20 @@ pub fn display_parsed(eval: &str) {
 }
 
 pub fn help_command() {
-	let mul_1 = Tokenizer::new("2014 / 2 * 5").parse().unwrap();
-	let min_sec = Tokenizer::new("5 min 30 s").parse().unwrap();
-	let wrapped = Tokenizer::new("5 * (10 / 2)").parse().unwrap();
+	let factory = Factory::new();
+
+	let mut mul_1 = Tokenizer::new("2014 / 2 * 5", &factory);
+	mul_1.parse().unwrap();
+
+	let mut min_sec = Tokenizer::new("5 min 30 s", &factory);
+	min_sec.parse().unwrap();
+
+	let mut wrapped = Tokenizer::new("5 * (10 / 2)", &factory);
+	wrapped.parse().unwrap();
 
 	let rows = &[
-		mul_1.as_slice(), min_sec.as_slice(),
-		wrapped.as_slice()
+		mul_1.get_compiled(), min_sec.get_compiled(),
+		wrapped.get_compiled()
 	];
 
 	let table = Table::new(rows);
