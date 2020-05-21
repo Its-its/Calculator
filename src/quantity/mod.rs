@@ -174,6 +174,9 @@ impl ops::Mul for Quantity {
 	type Output = Quantity;
 
 	fn mul(self, mut other: Quantity) -> Self::Output {
+		// TODO: Re-question on if I should actually use total_amount.
+		// Could cause issues with types like PB, EXA, etc..
+
 		let total_amount = if other.unit().map(|u| u.base() == "%").unwrap_or_default() {
 			// 200 * 20% = 8,000
 			other.remove_units();
@@ -190,7 +193,9 @@ impl ops::Mul for Quantity {
 			|v1, v2| std::cmp::max(v1, v2)
 		);
 
-		Quantity::new_from_base_unit(total_amount, unit)
+		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or(1.0);
+
+		Quantity::new_from_base_unit(total_amount / factor, unit)
 	}
 }
 
@@ -214,7 +219,9 @@ impl ops::Div for Quantity {
 			|v1, v2| std::cmp::max(v1, v2)
 		);
 
-		Quantity::new_from_base_unit(total_amount, unit)
+		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or(1.0);
+
+		Quantity::new_from_base_unit(total_amount * factor, unit)
 	}
 }
 
