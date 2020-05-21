@@ -80,6 +80,15 @@ impl fmt::Display for ParseValue {
 	}
 }
 
+impl PartialEq<Value> for ParseValue {
+	fn eq(&self, other: &Value) -> bool {
+		match self {
+			ParseValue::Single(v) => v == other,
+			_ => false
+		}
+	}
+}
+
 
 pub struct Parser<'a> {
 	factory: &'a Factory,
