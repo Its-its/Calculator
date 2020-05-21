@@ -376,7 +376,7 @@ impl<'a> Parser<'a> {
 			if let Some(item) = slicer.next() {
 				// Inner grouping?
 				if item == ExprToken::StartGrouping {
-					if crate::DEBUG_MODE {
+					if crate::is_debug() {
 						print_dbg!(" - Inner: {}", insides.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					}
 
@@ -384,7 +384,7 @@ impl<'a> Parser<'a> {
 				}
 
 				if item == ExprToken::EndGrouping {
-					if crate::DEBUG_MODE {
+					if crate::is_debug() {
 						print_dbg!(" - Inner: {}", insides.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(" "));
 					}
 
@@ -393,14 +393,7 @@ impl<'a> Parser<'a> {
 					// The insides of the grouping only.
 					let mut group_slicer = slicer.clone_from(start_pos + 1, end_pos - 1);
 
-
 					let parsed = self.parse_tokens(&mut group_slicer)?;
-
-					// if group_slicer.tokens.len() == 1 {
-					// 	slicer.replace(start_pos..end_pos, group_slicer.tokens);
-					// } else {
-					// 	slicer.replace(start_pos + 1..end_pos - 1, group_slicer.tokens);
-					// }
 
 					slicer.reset_pos();
 
@@ -425,7 +418,7 @@ impl<'a> Parser<'a> {
 
 				}
 
-				if crate::DEBUG_MODE {
+				if crate::is_debug() {
 					insides.push(item.clone());
 				}
 			} else {

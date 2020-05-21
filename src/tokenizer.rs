@@ -72,7 +72,7 @@ impl<'a> Tokenizer<'a> {
 			if let Some(found) = found {
 				compiled.push(found);
 			} else {
-				eprintln!("Unable to finish. Stopped at: {:?}", self.value.get(self.pos..).unwrap_or(""));
+				print_dbg!("Unable to finish. Stopped at: {:?}", self.value.get(self.pos..).unwrap_or(""));
 
 				break;
 			}

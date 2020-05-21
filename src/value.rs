@@ -103,7 +103,7 @@ impl Value {
 
 				let value = left + right;
 
-				println!(
+				print_dbg!(
 					"Add: {}{} + {}{} = {}{}",
 					l_amount,
 					l_name,
@@ -126,7 +126,7 @@ impl Value {
 				let (l_amount, r_amount) = (left.amount(), right.amount());
 
 				let value = left - right;
-				println!("Sub: {} - {} = {}", l_amount, r_amount, value.amount());
+				print_dbg!("Sub: {} - {} = {}", l_amount, r_amount, value.amount());
 				Ok(Value::Quantity(value))
 			}
 
@@ -140,7 +140,7 @@ impl Value {
 				let (l_amount, r_amount) = (left.amount(), right.amount());
 
 				let value = left * right;
-				println!("Mul: {} * {} = {}", l_amount, r_amount, value.amount());
+				print_dbg!("Mul: {} * {} = {}", l_amount, r_amount, value.amount());
 				Ok(Value::Quantity(value))
 			}
 
@@ -155,7 +155,7 @@ impl Value {
 
 				let value = left / right;
 
-				println!("Div: {} / {} = {}", l_amount, r_amount, value.amount());
+				print_dbg!("Div: {} / {} = {}", l_amount, r_amount, value.amount());
 
 				Ok(Value::Quantity(value))
 			}
@@ -171,7 +171,7 @@ impl Value {
 
 				let value = left.pow(right);
 
-				println!("Exp: {}^{} = {}", l_amount, r_amount, value.amount());
+				print_dbg!("Exp: {}^{} = {}", l_amount, r_amount, value.amount());
 
 				Ok(Value::Quantity(value))
 			}
@@ -187,7 +187,7 @@ impl Value {
 
 		let value = convert(&left, &right)?;
 
-		println!("Con: {}(f {}) -> {}(f {}) = {}", l_amount.unwrap_or_default(), left.base_factor(), r_amount.unwrap_or_default(), right.base_factor(), value);
+		print_dbg!("Conv: {}(f {}) -> {}(f {}) = {}", l_amount.unwrap_or_default(), left.base_factor(), r_amount.unwrap_or_default(), right.base_factor(), value);
 
 		Ok(Value::Quantity(Quantity::new_unit(value, unit)))
 	}
@@ -205,7 +205,7 @@ impl Value {
 			_ => return Err(Error::Text("Invalid Operator when trying to compare".into()))
 		};
 
-		println!("Comp: {} {} {} = {}", l_amount.clone().unwrap_or_default(), op, r_amount.clone().unwrap_or_default(), value);
+		print_dbg!("Comp: {} {} {} = {}", l_amount.clone().unwrap_or_default(), op, r_amount.clone().unwrap_or_default(), value);
 
 		Ok(Value::Quantity(Quantity::new(value)))
 	}

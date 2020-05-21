@@ -4,12 +4,12 @@
 pub type DefaultConsts<'a> = Vec<(&'a str, f64)>;
 
 pub const PI: f64 = std::f64::consts::PI;
-pub const EulersNumber: f64 = std::f64::consts::E;
+pub const EULERS_NUMBER: f64 = std::f64::consts::E;
 
 
 pub fn default_constants<'a>() -> DefaultConsts<'a> {
 	vec![
 		("PI", PI),
-		("E", EulersNumber)
+		("E", EULERS_NUMBER)
 	]
 }
