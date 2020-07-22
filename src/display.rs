@@ -64,17 +64,17 @@ impl<'a> LineDisplay for Line<'a> {
 
 // Table
 
-pub struct Table<'a> {
+pub struct Table {
 	total_width: Option<f64>,
 
 	// How many cells along the X plane?
 	horizontal_cell_count: usize,
 
-	value: &'a [&'a [ExprToken]]
+	value: Vec<Vec<ExprToken>>
 }
 
-impl<'a> Table<'a> {
-	pub fn new<'b: 'a>(value: &'b [&'b [ExprToken]]) -> Self {
+impl Table {
+	pub fn new(value: Vec<Vec<ExprToken>>) -> Self {
 		Self {
 			total_width: None,
 			horizontal_cell_count: 2,
@@ -83,7 +83,7 @@ impl<'a> Table<'a> {
 	}
 }
 
-impl<'a> LineDisplay for Table<'a> {
+impl LineDisplay for Table {
 	fn render(&self) -> HtmlDivElement {
 		let container: HtmlDivElement = create_element("div");
 		container.class_list().add_1("table");
@@ -96,10 +96,10 @@ impl<'a> LineDisplay for Table<'a> {
 		let mut current_row: HtmlElement = create_element("tr");
 		table.append_child(&current_row);
 
-		for line in self.value {
+		for line in &self.value {
 			let value: HtmlElement = create_element("td");
 
-			let line = Line::new(*line);
+			let line = Line::new(&line);
 			value.append_child(&line.render());
 
 			current_row.append_child(&value);
@@ -135,12 +135,6 @@ pub fn pretty_print<'a>(chars: Chars<'a>) -> String {
 			s.insert(0, val);
 			continue;
 		}
-
-		// if val == '.' {
-		// 	index = 0;
-		// 	s.insert(0, val);
-		// 	continue;
-		// }
 
 		if index != 0 && index % 3 == 0 {
 			s.insert(0, ',');

@@ -58,6 +58,7 @@ pub fn register_display() {
 	help_command();
 }
 
+
 pub fn display_parsed(eval: &str) {
 	let factory = Factory::new();
 
@@ -65,6 +66,29 @@ pub fn display_parsed(eval: &str) {
 
 	match parser.parse() {
 		Ok(v) => {
+			if parser.get_parsed_tokens().len() == 1 {
+				if let Some(token) = parser.get_parsed_tokens().first().cloned() {
+					if token.is_literal() {
+						let t = &[token.clone()];
+						let line = Line::new(t);
+						console_container().append_child(&line.render());
+
+
+						let command_name = token.from_literal();
+
+						match command_name.as_str() {
+							"help" => help_command(),
+							"functions" => fn_list_command(&factory),
+							"constants" => const_list_command(&factory),
+							"units" => unit_list_command(&factory),
+							_ => {}
+						}
+
+						return;
+					}
+				}
+			}
+
 			// Steps
 			log!("Steps:");
 			log!(" - {:?}", parser.get_parsed_tokens().iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(""));
@@ -92,24 +116,77 @@ pub fn display_parsed(eval: &str) {
 	}
 }
 
+
 pub fn help_command() {
 	let factory = Factory::new();
 
-	let mut mul_1 = Tokenizer::new("2014 / 2 * 5", &factory);
-	mul_1.parse().unwrap();
+	let mul_1 = into_tokens("2014 / 2 * 5", &factory);
+	let min_sec = into_tokens("5 min 30 s", &factory);
 
-	let mut min_sec = Tokenizer::new("5 min 30 s", &factory);
-	min_sec.parse().unwrap();
+	let wrapped = into_tokens("5 * (10 / 2)", &factory);
+	let m_into_h = into_tokens("120 min -> h", &factory);
 
-	let mut wrapped = Tokenizer::new("5 * (10 / 2)", &factory);
-	wrapped.parse().unwrap();
+	let command_help = into_tokens("help", &factory);
+	let command_fn = into_tokens("functions", &factory);
+	let command_units = into_tokens("units", &factory);
+	let command_const = into_tokens("constants", &factory);
 
-	let rows = &[
-		mul_1.get_compiled(), min_sec.get_compiled(),
-		wrapped.get_compiled()
+	let empty_vec = vec![ExprToken::Whitespace];
+
+	let rows = vec![
+		mul_1, min_sec,
+		wrapped, m_into_h,
+
+		empty_vec.clone(), empty_vec,
+
+		command_help, command_fn,
+		command_units, command_const,
 	];
 
 	let table = Table::new(rows);
 
 	console_container().append_child(&table.render());
+}
+
+pub fn unit_list_command(factory: &Factory) {
+	let units = factory.get_units();
+
+	let rows: Vec<Vec<ExprToken>> = units.iter()
+		.map(|f| vec![
+			ExprToken::Literal(f.long().to_string()),
+			// ExprToken::Literal(f.short().map(|a| a.to_string()).unwrap_or_default()),
+		])
+		.collect();
+
+	let table = Table::new(rows);
+
+	console_container().append_child(&table.render());
+}
+
+pub fn const_list_command(factory: &Factory) {
+	let constants = factory.get_constants();
+
+	let rows: Vec<Vec<ExprToken>> = constants.iter().map(|f| vec![ExprToken::Literal(f.0.clone())]).collect();
+
+	let table = Table::new(rows);
+
+	console_container().append_child(&table.render());
+}
+
+pub fn fn_list_command(factory: &Factory) {
+	let functions = factory.get_functions();
+
+	let rows: Vec<Vec<ExprToken>> = functions.iter().map(|f| vec![ExprToken::Literal(f.0.clone())]).collect();
+
+	let mut table = Table::new(rows);
+
+	console_container().append_child(&table.render());
+}
+
+
+fn into_tokens(value: &str, factory: &Factory) -> Vec<ExprToken> {
+	let mut token = Tokenizer::new(value, factory);
+	token.parse().unwrap();
+
+	token.into_compiled()
 }
