@@ -1,6 +1,0 @@
-/target
-node_modules
-/package-lock.json
-/pkg
-/dist
-/Cargo.lock
