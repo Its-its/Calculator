@@ -58,6 +58,10 @@ impl<'a> Tokenizer<'a> {
 		self.compiled.as_ref()
 	}
 
+	pub fn into_compiled(self) -> Vec<ExprToken> {
+		self.compiled
+	}
+
 	pub fn parse(&mut self) -> Result<()> {
 		let mut compiled = Vec::new();
 
