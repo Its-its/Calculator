@@ -1,5 +1,7 @@
+[workspace]
+
 members = [
 	"conversion",
-	"conversion-web",
-	"conversion-parser"
+	"web",
+	"parser"
 ]
