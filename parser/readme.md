@@ -1,0 +1,1 @@
+Parses a string input and returns the value.

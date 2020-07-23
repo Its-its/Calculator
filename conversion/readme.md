@@ -1,0 +1,1 @@
+Stores the base values for the conversions.

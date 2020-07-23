@@ -1,0 +1,1 @@
+The CLI/Terminal version of the calculator.
