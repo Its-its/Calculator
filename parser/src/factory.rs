@@ -1,6 +1,6 @@
 use conversion::{BaseUnit, FunctionEval};
 
-use crate::{Parser, ParseValue, functions, units, consts, Value, Result};
+use crate::{Parser, ParseValue, functions, units, consts, Result};
 
 
 pub struct Factory {
@@ -11,11 +11,7 @@ pub struct Factory {
 
 impl Factory {
 	pub fn new() -> Self {
-		Self {
-			functions: functions::default_functions().into_iter().map(|f| (f.0.to_string(), f.1)).collect(),
-			consts: consts::default_constants().into_iter().map(|f| (f.0.to_string(), f.1)).collect(),
-			units: units::default_units(),
-		}
+		Factory::default()
 	}
 
 
@@ -65,14 +61,23 @@ impl Factory {
 		self.units
 		.iter()
 		.find(|u| u == &name)
-		.map(|i| i.clone())
+		.cloned()
 		.unwrap_or_else(|| Box::new(units::CustomUnit::new(name.to_string())))
 	}
 
 	pub fn is_custom_unit(&self, name: &str) -> bool {
-		self.units
+		!self.units
 		.iter()
-		.find(|u| u == &name)
-		.is_none()
+		.any(|u| u == name)
+	}
+}
+
+impl Default for Factory {
+	fn default() -> Factory {
+		Factory {
+			functions: functions::default_functions().into_iter().map(|f| (f.0.to_string(), f.1)).collect(),
+			consts: consts::default_constants().into_iter().map(|f| (f.0.to_string(), f.1)).collect(),
+			units: units::default_units(),
+		}
 	}
 }

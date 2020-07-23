@@ -55,7 +55,7 @@ impl FunctionEval for Min {
 
 		let mut last_item = next(&mut iter)?;
 
-		while let Some(other) = iter.next() {
+		for other in iter {
 			last_item = last_item.this_or_that_fn(other, |a, b| a.min(b) == a)
 		}
 
@@ -73,7 +73,7 @@ impl FunctionEval for Max {
 
 		let mut last_item = next(&mut iter)?;
 
-		while let Some(other) = iter.next() {
+		for other in iter {
 			last_item = last_item.this_or_that_fn(other, |a, b| a.max(b) == a)
 		}
 

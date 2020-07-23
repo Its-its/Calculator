@@ -3,7 +3,7 @@ use std::str::Chars;
 
 use web_sys::*;
 
-use conversion_parser::{ExprToken, Tokenizer};
+use conversion_parser::ExprToken;
 
 use crate::create_element;
 
@@ -39,14 +39,14 @@ impl<'a> fmt::Display for Line<'a> {
 impl<'a> LineDisplay for Line<'a> {
 	fn render(&self) -> HtmlDivElement {
 		let container: HtmlDivElement = create_element("div");
-		container.class_list().add_1("line");
+		let _ = container.class_list().add_1("line");
 
 		for token in self.value {
 			let value: HtmlSpanElement = create_element("span");
 
 			value.set_inner_text(&format!("{}", token));
 
-			match token {
+			let _ = match token {
 				ExprToken::Literal(_) => value.class_list().add_1("literal"),
 				ExprToken::Number(_) => value.class_list().add_1("amount"),
 				ExprToken::Operator(_) => value.class_list().add_1("operator"),
@@ -54,7 +54,7 @@ impl<'a> LineDisplay for Line<'a> {
 				_ => Ok(())
 			};
 
-			container.append_child(&value);
+			let _ = container.append_child(&value);
 		}
 
 		container
@@ -86,27 +86,27 @@ impl Table {
 impl LineDisplay for Table {
 	fn render(&self) -> HtmlDivElement {
 		let container: HtmlDivElement = create_element("div");
-		container.class_list().add_1("table");
+		let _ = container.class_list().add_1("table");
 
 		let table: HtmlElement = create_element("table");
-		container.append_child(&table);
+		let _ = container.append_child(&table);
 
 		// Starts at 1 since (0 % amount == 0) is true
 		let mut index = 1;
 		let mut current_row: HtmlElement = create_element("tr");
-		table.append_child(&current_row);
+		let _ = table.append_child(&current_row);
 
 		for line in &self.value {
 			let value: HtmlElement = create_element("td");
 
 			let line = Line::new(&line);
-			value.append_child(&line.render());
+			let _ = value.append_child(&line.render());
 
-			current_row.append_child(&value);
+			let _ = current_row.append_child(&value);
 
 			if index % self.horizontal_cell_count == 0 {
 				current_row = create_element("tr");
-				table.append_child(&current_row);
+				let _ = table.append_child(&current_row);
 			}
 
 
@@ -122,8 +122,8 @@ impl LineDisplay for Table {
 
 
 
-pub fn pretty_print<'a>(chars: Chars<'a>) -> String {
-	let decimal_place = chars.as_str().find('.').unwrap_or(chars.as_str().len());
+pub fn pretty_print(chars: Chars<'_>) -> String {
+	let decimal_place = chars.as_str().find('.').unwrap_or_else(|| chars.as_str().len());
 
 	let rev_chars = chars.rev().enumerate();
 	let mut s = String::new();

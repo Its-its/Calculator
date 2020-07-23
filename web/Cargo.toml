@@ -11,7 +11,7 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-conversion-parser = { path = "../converson-parser", version = "0.1.0" }
+conversion-parser = { path = "../parser", version = "0.1.0" }
 
 wasm-bindgen = "0.2.60"
 console_error_panic_hook = "0.1.6"

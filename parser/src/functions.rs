@@ -1,7 +1,6 @@
-use conversion::{Quantity, FunctionEval};
+use conversion::FunctionEval;
 use conversion::quantity::math::*;
 
-use crate::{Result, Error};
 
 
 pub fn default_functions<'a>() -> Vec<(&'a str, Box<dyn FunctionEval>)> {

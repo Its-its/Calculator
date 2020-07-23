@@ -1,3 +1,7 @@
+#![warn(warnings, rust_2018_idioms, unsafe_code, dead_code)]
+#![warn(clippy::all)]
+#![allow(clippy::missing_docs_in_private_items, unsafe_code)]
+
 pub static mut DEBUG_MODE: bool = false;
 
 

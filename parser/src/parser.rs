@@ -1,10 +1,10 @@
 use std::fmt;
 use std::ops::RangeBounds;
 
-use conversion::{Quantity, BaseUnit, Units};
+use conversion::{Quantity, Units};
 
 use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
-use crate::operations::{Add, Subtract, Divide, Multiply, Literal, Grouping, Function, ExpressionArg};
+use crate::operations::{Literal, Function, ExpressionArg};
 
 #[derive(Debug)]
 pub struct Expression {
@@ -44,7 +44,7 @@ macro_rules! return_value {
 	($parser:expr, ExprToken::$token:ident) => {{
 		match $parser.next().ok_or(Error::InputEmpty)? {
 			ExprToken::$token(v) => v,
-			t @ _ => return Err(Error::UnexpectedToken(t))
+			t => return Err(Error::UnexpectedToken(t))
 		}
 	}};
 }
@@ -105,7 +105,7 @@ impl<'a> Parser<'a> {
 		}
 	}
 
-	pub fn new_with_tokenizer(factory: &'a Factory, tokenizer: Tokenizer<'a>, eval: &'a str) -> Self {
+	pub fn new_with_tokenizer(factory: &'a Factory, tokenizer: Tokenizer<'a>) -> Self {
 		Parser {
 			factory,
 			tokenizer,
@@ -232,8 +232,8 @@ impl<'a> Parser<'a> {
 		}
 
 		// GROUPINGS ( [ {  } ] )
-		let mut found_grps = slicer.find_multiple(&[ExprToken::StartGrouping, ExprToken::EndGrouping]).into_iter();
-		while let Some(pos) = found_grps.next() {
+		let found_grps = slicer.find_multiple(&[ExprToken::StartGrouping, ExprToken::EndGrouping]).into_iter();
+		for pos in found_grps {
 			let found = self.parse_parentheses(pos, slicer)?;
 			if found.is_some() { return Ok(found); }
 		}
@@ -251,9 +251,9 @@ impl<'a> Parser<'a> {
 			Operator::DoesNotEqual.into(),
 		]));
 
-		let mut found_ops = found_ops.into_iter();
+		let found_ops = found_ops.into_iter();
 
-		while let Some(pos) = found_ops.next() {
+		for pos in found_ops {
 			let found = self.parse_operation(pos, slicer)?;
 			if found.is_some() { return Ok(found); }
 		}
@@ -329,7 +329,6 @@ impl<'a> Parser<'a> {
 
 
 			let actual_start = std::cmp::min(start_pos, slicer.get_pos());
-			let actual_end = std::cmp::max(start_pos, slicer.get_pos());
 
 			slicer.forward();
 			// Add 1 to Ignore Start Grouping.
@@ -346,21 +345,17 @@ impl<'a> Parser<'a> {
 				print_dbg!(" - Function Literal: {}", func_name);
 
 				let func = self.factory.find_func(func_name)
-					.ok_or(Error::Text("Not a valid function.".into()))?;
+					.ok_or_else(|| Error::Text("Not a valid function.".into()))?;
 
 				// Capture everything after Function Name and inside the parentheses.
 				let mut inner_slicer = slicer.clone_from(start_pos + 1, slicer.tokens.len() - 1);
 
 				let mut params = Vec::new();
 
-				loop {
-					if let Some(expr) = self.parse_number_expression(&mut inner_slicer)? {
-						params.push(expr.args);
+				while let Some(expr) = self.parse_number_expression(&mut inner_slicer)? {
+					params.push(expr.args);
 
-						if !inner_slicer.consume_if_next(&ExprToken::Comma) {
-							break;
-						}
-					} else {
+					if !inner_slicer.consume_if_next(&ExprToken::Comma) {
 						break;
 					}
 				}
@@ -434,8 +429,6 @@ impl<'a> Parser<'a> {
 				return Err(Error::InputEmpty);
 			}
 		}
-
-		Ok(None)
 	}
 
 	pub fn parse_operation(&self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
@@ -505,40 +498,36 @@ impl<'a> Parser<'a> {
 					)
 				));
 			}
-		} else {
-			if slicer.is_next_value_func(|v| v.is_number()) {
-				let value = return_value!(slicer, ExprToken::Number);
-				let mut unit = self.parse_unit_expression(slicer)?;
+		} else if slicer.is_next_value_func(|v| v.is_number()) {
+			let value = return_value!(slicer, ExprToken::Number);
+			let mut unit = self.parse_unit_expression(slicer)?;
 
-				if unit.is_none() {
-					// Account for Percentage:
-					//  - 10 - 10%
-					//  - [Number(10), Minus, Number(10), Division]
-					//  - 9
-					// Change Division into a Unit. Check for unit when operating.
-					// Checks for Division. Then checks to see if token after it is a operator or doesn't exist.
-					if slicer.is_next_value(&Operator::Division.into()) && slicer.get(slicer.get_pos() + 1).map(|t| t.is_operator()).unwrap_or(true) {
-						slicer.next_pos();
-						unit = Some(Units::new(self.factory.find_unit("%")));
-					}
+			if unit.is_none() {
+				// Account for Percentage:
+				//  - 10 - 10%
+				//  - [Number(10), Minus, Number(10), Division]
+				//  - 9
+				// Change Division into a Unit. Check for unit when operating.
+				// Checks for Division. Then checks to see if token after it is a operator or doesn't exist.
+				if slicer.is_next_value(&Operator::Division.into()) && slicer.get(slicer.get_pos() + 1).map(|t| t.is_operator()).unwrap_or(true) {
+					slicer.next_pos();
+					unit = Some(Units::new(self.factory.find_unit("%")));
 				}
-
-				return Ok(Some(
-					Expression::new_range(
-						Box::new(Literal::new(Value::Quantity(Quantity::new_unit(value, unit)))),
-						(start_pos.min(slicer.get_pos()), start_pos.max(slicer.get_pos()))
-					)
-				));
 			}
 
-			else if let Some(unit) = self.parse_unit_expression(slicer)? {
-				return Ok(Some(
-					Expression::new_range(
-						Box::new(Literal::new(Value::Unit(unit))),
-						(start_pos.min(slicer.get_pos()), start_pos.max(slicer.get_pos()))
-					)
-				));
-			}
+			return Ok(Some(
+				Expression::new_range(
+					Box::new(Literal::new(Value::Quantity(Quantity::new_unit(value, unit)))),
+					(start_pos.min(slicer.get_pos()), start_pos.max(slicer.get_pos()))
+				)
+			));
+		} else if let Some(unit) = self.parse_unit_expression(slicer)? {
+			return Ok(Some(
+				Expression::new_range(
+					Box::new(Literal::new(Value::Unit(unit))),
+					(start_pos.min(slicer.get_pos()), start_pos.max(slicer.get_pos()))
+				)
+			));
 		}
 
 		Ok(None)
@@ -549,9 +538,9 @@ impl<'a> Parser<'a> {
 			let literal_val = return_value!(slicer, ExprToken::Literal);
 
 			let mut units = Vec::new();
-			let mut split = literal_val.split("/");
+			let split = literal_val.split('/');
 
-			while let Some(name) = split.next() {
+			for name in split {
 				let base_unit = self.factory.find_unit(name);
 
 				units.push(base_unit);
@@ -665,12 +654,10 @@ impl TokenSlicer {
 			.filter(|(i, e)| {
 				if e != &token {
 					false
+				} else if self.is_reversed() {
+					i <= &self.get_pos()
 				} else {
-					if self.is_reversed() {
-						i <= &self.get_pos()
-					} else {
-						i >= &self.get_pos()
-					}
+					i >= &self.get_pos()
 				}
 			})
 			.map(|(u, _)| u)
@@ -705,12 +692,10 @@ impl TokenSlicer {
 			.filter(|(i, e)| {
 				if !exp_fn(e) {
 					false
+				} else if self.is_reversed() {
+					i <= &self.get_pos()
 				} else {
-					if self.is_reversed() {
-						i <= &self.get_pos()
-					} else {
-						i >= &self.get_pos()
-					}
+					i >= &self.get_pos()
 				}
 			})
 			.map(|(u, _)| u)

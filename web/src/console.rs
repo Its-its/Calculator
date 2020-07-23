@@ -71,10 +71,11 @@ pub fn display_parsed(eval: &str) {
 					if token.is_literal() {
 						let t = &[token.clone()];
 						let line = Line::new(t);
-						console_container().append_child(&line.render());
+
+						let _ = console_container().append_child(&line.render());
 
 
-						let command_name = token.from_literal();
+						let command_name = token.into_literal();
 
 						match command_name.as_str() {
 							"help" => help_command(),
@@ -110,7 +111,7 @@ pub fn display_parsed(eval: &str) {
 
 			let line = Line::new(full.as_slice());
 
-			console_container().append_child(&line.render());
+			let _ = console_container().append_child(&line.render());
 		},
 		Err(e) => log!("{:?}", e)
 	}
@@ -145,7 +146,7 @@ pub fn help_command() {
 
 	let table = Table::new(rows);
 
-	console_container().append_child(&table.render());
+	let _ = console_container().append_child(&table.render());
 }
 
 pub fn unit_list_command(factory: &Factory) {
@@ -160,7 +161,7 @@ pub fn unit_list_command(factory: &Factory) {
 
 	let table = Table::new(rows);
 
-	console_container().append_child(&table.render());
+	let _ = console_container().append_child(&table.render());
 }
 
 pub fn const_list_command(factory: &Factory) {
@@ -170,7 +171,7 @@ pub fn const_list_command(factory: &Factory) {
 
 	let table = Table::new(rows);
 
-	console_container().append_child(&table.render());
+	let _ = console_container().append_child(&table.render());
 }
 
 pub fn fn_list_command(factory: &Factory) {
@@ -178,9 +179,9 @@ pub fn fn_list_command(factory: &Factory) {
 
 	let rows: Vec<Vec<ExprToken>> = functions.iter().map(|f| vec![ExprToken::Literal(f.0.clone())]).collect();
 
-	let mut table = Table::new(rows);
+	let table = Table::new(rows);
 
-	console_container().append_child(&table.render());
+	let _ = console_container().append_child(&table.render());
 }
 
 

@@ -1,8 +1,8 @@
 use std::fmt;
 
-use conversion::{Quantity, BaseUnit, FunctionEval};
+use conversion::{Quantity, FunctionEval};
 
-use crate::{Result, Error, Value, Operator, ExprToken};
+use crate::{Result, Error, Value, Operator};
 
 
 pub type ExpressionArg = Box<dyn Expression>;
@@ -154,10 +154,10 @@ impl Expression for Comparison {
 
 
 #[derive(Debug)]
-pub struct Function(Box<FunctionEval>, Vec<ExpressionArg>);
+pub struct Function(Box<dyn FunctionEval>, Vec<ExpressionArg>);
 
 impl Function {
-	pub fn new(func: Box<FunctionEval>, args: Vec<ExpressionArg>) -> Self {
+	pub fn new(func: Box<dyn FunctionEval>, args: Vec<ExpressionArg>) -> Self {
 		Function(func, args)
 	}
 }
@@ -169,7 +169,7 @@ impl Expression for Function {
 			.collect::<Result<Vec<Value>>>()?;
 
 		let params = params.into_iter()
-			.map(|i| i.into_quantity().ok_or(Error::Text("Expected Quantity".into())))
+			.map(|i| i.into_quantity().ok_or_else(|| Error::Text("Expected Quantity".into())))
 			.collect::<Result<Vec<Quantity>>>()?;
 
 		Ok(Value::Quantity(self.0.eval(params)?))

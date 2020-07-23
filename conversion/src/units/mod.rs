@@ -161,7 +161,7 @@ impl PartialEq<&str> for &Box<dyn BaseUnit> {
 		self.long() == *other ||
 		self.multiple() == *other ||
 		self.short().map(|i| i == *other).unwrap_or_default() ||
-		self.alt().into_iter().find(|i| i == other).is_some()
+		self.alt().into_iter().any(|i| i == *other)
 	}
 }
 
@@ -170,7 +170,7 @@ impl PartialEq<&str> for &dyn BaseUnit {
 		self.long() == *other ||
 		self.multiple() == *other ||
 		self.short().map(|i| i == *other).unwrap_or_default() ||
-		self.alt().into_iter().find(|i| i == other).is_some()
+		self.alt().into_iter().any(|i| i == *other)
 	}
 }
 

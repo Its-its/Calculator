@@ -104,13 +104,10 @@ impl fmt::Display for Quantity {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str(&format!("{}", self.amount()))?;
 
-		match self.unit() {
-			Some(u) => {
-				f.write_str(" ")?;
+		if let Some(u) = self.unit() {
+			f.write_str(" ")?;
 
-				u.fmt(f)?
-			},
-			None => ()
+			u.fmt(f)?;
 		}
 
 		Ok(())
@@ -139,7 +136,7 @@ impl ops::Add for Quantity {
 		let unit = return_unit(
 			self.into_unit(),
 			other.into_unit(),
-			|v1, v2| std::cmp::max(v1, v2)
+			std::cmp::max
 		);
 
 		Quantity::new_from_base_unit(total_amount, unit)
@@ -163,7 +160,7 @@ impl ops::Sub for Quantity {
 		let unit = return_unit(
 			self.into_unit(),
 			other.into_unit(),
-			|v1, v2| std::cmp::max(v1, v2)
+			std::cmp::max
 		);
 
 		Quantity::new_from_base_unit(total_amount, unit)
@@ -190,7 +187,7 @@ impl ops::Mul for Quantity {
 		let unit = return_unit(
 			self.into_unit(),
 			other.into_unit(),
-			|v1, v2| std::cmp::max(v1, v2)
+			std::cmp::max
 		);
 
 		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or(1.0);
@@ -216,7 +213,7 @@ impl ops::Div for Quantity {
 		let unit = return_unit(
 			self.into_unit(),
 			other.into_unit(),
-			|v1, v2| std::cmp::max(v1, v2)
+			std::cmp::max
 		);
 
 		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or(1.0);
@@ -319,10 +316,10 @@ impl Units {
 	}
 
 	pub fn short(&self) -> String {
-		let short = self.base().short().unwrap_or(self.base().long());
+		let short = self.base().short().unwrap_or_else(|| self.base().long());
 
 		if let Some(div) = self.base_2() {
-			format!("{}/{}", short, div.short().unwrap_or(div.long()))
+			format!("{}/{}", short, div.short().unwrap_or_else(|| div.long()))
 		} else {
 			short.to_string()
 		}

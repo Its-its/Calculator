@@ -99,7 +99,7 @@ impl<'a> Tokenizer<'a> {
 	fn parse_number(&mut self) -> ParseResult {
 		let remains = self.get_remaining_str();
 
-		let mut builder = Regex::new(r#"^((?:[0-9,]+)?\.?(?:e-?)?(?:[0-9]+)?)"#).unwrap();
+		let builder = Regex::new(r#"^((?:[0-9,]+)?\.?(?:e-?)?(?:[0-9]+)?)"#).unwrap();
 
 		if let Some(found) = builder.find(remains) {
 			let mut end = found.end();
@@ -130,7 +130,7 @@ impl<'a> Tokenizer<'a> {
 	fn parse_literal(&mut self) -> ParseResult {
 		let remains = self.get_remaining_str();
 
-		let mut builder = Regex::new(r#"^([^\d\s\(\)\[\]\{\}]+)"#).unwrap();
+		let builder = Regex::new(r#"^([^\d\s\(\)\[\]\{\}]+)"#).unwrap();
 
 		if let Some(found) = builder.find(remains) {
 			if found.end() != 0 {

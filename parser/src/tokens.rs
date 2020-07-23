@@ -137,7 +137,7 @@ impl Operator {
 					Comparison::new(
 						left,
 						right,
-						op.clone()
+						*op
 					)
 				)
 			}
@@ -241,7 +241,7 @@ impl ExprToken {
 		}
 	}
 
-	pub fn from_literal(self) -> String {
+	pub fn into_literal(self) -> String {
 		match self {
 			ExprToken::Literal(l) => l,
 			_ => panic!("Not an Literal")

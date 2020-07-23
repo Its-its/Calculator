@@ -1,6 +1,6 @@
-use std::{fmt, ops};
+use std::fmt;
 
-use conversion::{Quantity, BaseUnit, Units};
+use conversion::{Quantity, Units};
 
 use crate::{Result, Error, ExprToken, Operator};
 use crate::units::convert;
