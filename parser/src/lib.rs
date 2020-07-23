@@ -45,12 +45,14 @@ pub use operations::ExpressionArg;
 
 #[cfg(test)]
 mod tests {
+	use rust_decimal::Decimal;
+
 	use super::*;
 
 
 	macro_rules! test {
 		($factory:expr, $eval:expr, $result:expr) => {
-			assert_eq!($factory.parse($eval).unwrap(), Value::new_quantity($result));
+			assert_eq!($factory.parse($eval).unwrap(), Value::new_quantity(Decimal::from_scientific(&format!("{}", $result)).unwrap()));
 		};
 	}
 

@@ -1,6 +1,8 @@
 use std::fmt;
 use std::ops::RangeBounds;
 
+use rust_decimal::Decimal;
+
 use conversion::{Quantity, Units};
 
 use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
@@ -37,7 +39,7 @@ impl From<ExpressionArg> for Expression {
 	}
 }
 
-pub type ExpressionResult<'a> = Result<Option<Expression>>;
+pub type ExpressionResult = Result<Option<Expression>>;
 
 
 macro_rules! return_value {
@@ -206,7 +208,7 @@ impl<'a> Parser<'a> {
 				updated = true;
 
 				let cmp = neighbors.into_iter()
-				.fold::<ExpressionArg, _>(Box::new(Literal::new(Value::Quantity(Quantity::new(0.0)))), |a, b| {
+				.fold::<ExpressionArg, _>(Box::new(Literal::new(Value::Quantity(Quantity::new(Decimal::new(0, 0))))), |a, b| {
 					Operator::Plus.compare(a, b)
 				});
 

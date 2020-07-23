@@ -1,5 +1,7 @@
 use std::fmt;
 
+use rust_decimal::Decimal;
+
 use conversion::{Quantity, Units};
 
 use crate::{Result, Error, ExprToken, Operator};
@@ -13,11 +15,11 @@ pub enum Value {
 }
 
 impl Value {
-	pub fn new_quantity(value: f64) -> Value {
+	pub fn new_quantity(value: Decimal) -> Value {
 		Value::Quantity(Quantity::new(value))
 	}
 
-	pub fn new_quantity_unit(value: f64, unit: Option<Units>) -> Value {
+	pub fn new_quantity_unit(value: Decimal, unit: Option<Units>) -> Value {
 		Value::Quantity(Quantity::new_unit(value, unit))
 	}
 
@@ -36,21 +38,21 @@ impl Value {
 		}
 	}
 
-	pub fn base_factor(&self) -> f64 {
+	pub fn base_factor(&self) -> Decimal {
 		match self {
-			Value::Quantity(q) => q.unit().map(|u| u.base().base_factor()).unwrap_or(1.0),
+			Value::Quantity(q) => q.unit().map(|u| u.base().base_factor()).unwrap_or_else(|| Decimal::new(1, 0)),
 			Value::Unit(u) => u.base().base_factor()
 		}
 	}
 
-	pub fn amount(&self) -> Option<f64> {
+	pub fn amount(&self) -> Option<Decimal> {
 		match self {
 			Value::Quantity(q) => Some(q.amount()),
 			Value::Unit(_) => None
 		}
 	}
 
-	pub fn total_amount(&self) -> Option<f64> {
+	pub fn total_amount(&self) -> Option<Decimal> {
 		match self {
 			Value::Quantity(q) => Some(q.total_amount()),
 			Value::Unit(_) => None
@@ -164,21 +166,21 @@ impl Value {
 		}
 	}
 
-	pub fn try_exponentiate(left: Value, right: Value) -> Result<Value> {
-		match (left, right) {
-			(Value::Quantity(left), Value::Quantity(right)) => {
-				let (l_amount, r_amount) = (left.amount(), right.amount());
+	// pub fn try_exponentiate(left: Value, right: Value) -> Result<Value> {
+	// 	match (left, right) {
+	// 		(Value::Quantity(left), Value::Quantity(right)) => {
+	// 			let (l_amount, r_amount) = (left.amount(), right.amount());
 
-				let value = left.pow(right);
+	// 			let value = left.pow(right);
 
-				print_dbg!("Exp: {}^{} = {}", l_amount, r_amount, value.amount());
+	// 			print_dbg!("Exp: {}^{} = {}", l_amount, r_amount, value.amount());
 
-				Ok(Value::Quantity(value))
-			}
+	// 			Ok(Value::Quantity(value))
+	// 		}
 
-			_ => Err("Unable to divide.".into())
-		}
-	}
+	// 		_ => Err("Unable to divide.".into())
+	// 	}
+	// }
 
 	pub fn try_conversion(left: Value, right: Value) -> Result<Value> {
 		let (l_amount, r_amount) = (left.amount(), right.amount());
@@ -196,18 +198,18 @@ impl Value {
 		let (l_amount, r_amount) = (left.total_amount(), right.total_amount());
 
 		let value = match op {
-			Operator::GreaterThan => (l_amount > r_amount) as usize as f64,
-			Operator::GreaterThanOrEqual => (l_amount >= r_amount) as usize as f64,
-			Operator::LessThan => (l_amount < r_amount) as usize as f64,
-			Operator::LessThanOrEqual => (l_amount <= r_amount) as usize as f64,
-			Operator::DoubleEqual => (l_amount == r_amount) as usize as f64,
-			Operator::DoesNotEqual => (l_amount != r_amount) as usize as f64,
+			Operator::GreaterThan => (l_amount > r_amount) as i64,
+			Operator::GreaterThanOrEqual => (l_amount >= r_amount) as i64,
+			Operator::LessThan => (l_amount < r_amount) as i64,
+			Operator::LessThanOrEqual => (l_amount <= r_amount) as i64,
+			Operator::DoubleEqual => (l_amount == r_amount) as i64,
+			Operator::DoesNotEqual => (l_amount != r_amount) as i64,
 			_ => return Err(Error::Text("Invalid Operator when trying to compare".into()))
 		};
 
 		print_dbg!("Comp: {} {} {} = {}", l_amount.clone().unwrap_or_default(), op, r_amount.clone().unwrap_or_default(), value);
 
-		Ok(Value::Quantity(Quantity::new(value)))
+		Ok(Value::Quantity(Quantity::new(Decimal::new(1, 0))))
 	}
 }
 

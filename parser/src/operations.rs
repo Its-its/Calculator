@@ -93,23 +93,23 @@ impl Expression for Divide {
 
 
 
-#[derive(Debug)]
-pub struct Exponentiate(ExpressionArg, ExpressionArg);
+// #[derive(Debug)]
+// pub struct Exponentiate(ExpressionArg, ExpressionArg);
 
-impl Exponentiate {
-	pub fn new(left: ExpressionArg, right: ExpressionArg) -> Self {
-		Exponentiate(left, right)
-	}
-}
+// impl Exponentiate {
+// 	pub fn new(left: ExpressionArg, right: ExpressionArg) -> Self {
+// 		Exponentiate(left, right)
+// 	}
+// }
 
-impl Expression for Exponentiate {
-	fn eval(&self) -> Result<Value> {
-		let left = self.0.eval()?;
-		let right = self.1.eval()?;
+// impl Expression for Exponentiate {
+// 	fn eval(&self) -> Result<Value> {
+// 		let left = self.0.eval()?;
+// 		let right = self.1.eval()?;
 
-		Ok(Value::try_exponentiate(left, right)?)
-	}
-}
+// 		Ok(Value::try_exponentiate(left, right)?)
+// 	}
+// }
 
 
 

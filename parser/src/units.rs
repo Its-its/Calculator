@@ -1,6 +1,8 @@
+use rust_decimal::Decimal;
+
+use conversion::units::*;
 
 use crate::{Value, Result, Error};
-use conversion::units::*;
 use crate::operations::ExpressionArg;
 
 pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
@@ -40,7 +42,7 @@ pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 		Box::new(PetaByte),
 		Box::new(ExaByte),
 		Box::new(ZettaByte),
-		Box::new(YottaByte)
+		// Box::new(YottaByte)
 	]
 }
 
@@ -59,7 +61,7 @@ pub fn can_operate(one: &ExpressionArg, two: &ExpressionArg) -> bool {
 }
 
 
-pub fn convert(from: &Value, to: &Value) -> Result<f64> {
+pub fn convert(from: &Value, to: &Value) -> Result<Decimal> {
 	// TODO: Currently will error if doing: 1 -> ms
 	let from_unit = from.as_base_unit().ok_or_else(|| Error::Text("Cannot convert something that doesn't have a unit".into()))?;
 	let to_unit = match to.as_base_unit() {
@@ -75,8 +77,8 @@ pub fn convert(from: &Value, to: &Value) -> Result<f64> {
 		}
 
 		if from_unit.is_base_2_equal(to_unit) {
-			let factor_1 = from_unit.base_2().map(|b| b.base_factor()).unwrap_or(1.0);
-			let factor_2 = to_unit.base_2().map(|b| b.base_factor()).unwrap_or(1.0);
+			let factor_1 = from_unit.base_2().map(|b| b.base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
+			let factor_2 = to_unit.base_2().map(|b| b.base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
 
 			val = (val / factor_1) * factor_2;
 		}

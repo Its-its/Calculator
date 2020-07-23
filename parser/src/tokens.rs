@@ -1,6 +1,8 @@
 use std::fmt;
 
-use crate::operations::{ExpressionArg, Divide, Multiply, Add, Subtract, Exponentiate, Conversion, Comparison};
+use rust_decimal::Decimal;
+
+use crate::operations::{ExpressionArg, Divide, Multiply, Add, Subtract, Conversion, Comparison};
 
 
 #[derive(Debug, PartialEq)]
@@ -16,7 +18,7 @@ pub enum TokenType {
 
 	ExactOperator(Operator),
 	ExactLiteral(String),
-	ExactNumber(f64)
+	ExactNumber(Decimal)
 }
 
 impl PartialEq<ExprToken> for TokenType {
@@ -110,12 +112,13 @@ impl Operator {
 			}
 
 			Operator::Caret => {
-				Box::new(
-					Exponentiate::new(
-						left,
-						right
-					)
-				)
+				panic!("Caret's are not implemented currently.")
+				// Box::new(
+				// 	Exponentiate::new(
+				// 		left,
+				// 		right
+				// 	)
+				// )
 			}
 
 			Operator::ConvertInto => {
@@ -179,7 +182,7 @@ pub enum ExprToken {
 	StartGrouping,
 	EndGrouping,
 
-	Number(f64),
+	Number(Decimal),
 	Operator(Operator),
 	Literal(String)
 }
@@ -248,7 +251,7 @@ impl ExprToken {
 		}
 	}
 
-	pub fn into_number(self) -> f64 {
+	pub fn into_number(self) -> Decimal {
 		match self {
 			ExprToken::Number(l) => l,
 			_ => panic!("Not an Number")

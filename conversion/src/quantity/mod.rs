@@ -1,6 +1,8 @@
 use std::{ops, fmt, cmp};
 use std::cmp::{Ordering, PartialOrd};
 
+use rust_decimal::Decimal;
+
 use crate::{BaseUnit, Result};
 
 
@@ -33,14 +35,14 @@ pub trait FunctionEval: fmt::Debug + CloneFunctionEval {
 
 
 #[derive(Debug, Clone)]
-pub struct Quantity(f64, Option<Units>);
+pub struct Quantity(Decimal, Option<Units>);
 
 impl Quantity {
-	pub fn new(value: f64) -> Quantity {
+	pub fn new(value: Decimal) -> Quantity {
 		Quantity(value, None)
 	}
 
-	pub fn new_from_base_unit(value: f64, unit: Option<Units>) -> Quantity {
+	pub fn new_from_base_unit(value: Decimal, unit: Option<Units>) -> Quantity {
 		if let Some(unit) = unit {
 			Quantity(value / unit.base().base_factor(), Some(unit))
 		} else {
@@ -48,28 +50,28 @@ impl Quantity {
 		}
 	}
 
-	pub fn new_unit(value: f64, unit: Option<Units>) -> Quantity {
+	pub fn new_unit(value: Decimal, unit: Option<Units>) -> Quantity {
 		Quantity(value, unit)
 	}
 
 	pub fn empty() -> Quantity {
-		Quantity(0.0, None)
+		Quantity(Decimal::default(), None)
 	}
 
-	pub fn pow(self, exp: Quantity) -> Quantity {
-		Quantity::new_unit(self.amount().powf(exp.amount()), self.1)
-	}
+	// pub fn pow(self, exp: Quantity) -> Quantity {
+	// 	Quantity::new_unit(self.amount().powf(exp.amount()), self.1)
+	// }
 
 
-	pub fn amount(&self) -> f64 {
+	pub fn amount(&self) -> Decimal {
 		self.0
 	}
 
-	pub fn set_amount(&mut self, value: f64) {
+	pub fn set_amount(&mut self, value: Decimal) {
 		self.0 = value;
 	}
 
-	pub fn total_amount(&self) -> f64 {
+	pub fn total_amount(&self) -> Decimal {
 		if let Some(unit) = self.unit() {
 			self.amount() * unit.base().base_factor()
 		} else {
@@ -90,7 +92,7 @@ impl Quantity {
 	}
 
 
-	pub fn this_or_that_fn<F: Fn(f64, f64) -> bool>(self, other: Self, func: F) -> Self {
+	pub fn this_or_that_fn<F: Fn(Decimal, Decimal) -> bool>(self, other: Self, func: F) -> Self {
 		if func(self.total_amount(), other.total_amount()) {
 			self
 		} else {
@@ -127,7 +129,7 @@ impl ops::Add for Quantity {
 			// 200 + 20% = 240
 			other.remove_units();
 
-			self.total_amount() + (self.total_amount() * (other.total_amount() / 100.0))
+			self.total_amount() + (self.total_amount() * (other.total_amount() / Decimal::new(100, 0)))
 		} else {
 			self.total_amount() + other.total_amount()
 		};
@@ -151,7 +153,7 @@ impl ops::Sub for Quantity {
 			// 200 - 20% = 160
 			other.remove_units();
 
-			self.total_amount() - (self.total_amount() * (other.total_amount() / 100.0))
+			self.total_amount() - (self.total_amount() * (other.total_amount() / Decimal::new(100, 0)))
 		} else {
 			self.total_amount() - other.total_amount()
 		};
@@ -178,7 +180,7 @@ impl ops::Mul for Quantity {
 			// 200 * 20% = 8,000
 			other.remove_units();
 
-			self.total_amount() * (self.total_amount() * (other.total_amount() / 100.0))
+			self.total_amount() * (self.total_amount() * (other.total_amount() / Decimal::new(100, 0)))
 		} else {
 			self.total_amount() * other.total_amount()
 		};
@@ -190,7 +192,7 @@ impl ops::Mul for Quantity {
 			std::cmp::max
 		);
 
-		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or(1.0);
+		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
 
 		Quantity::new_from_base_unit(total_amount / factor, unit)
 	}
@@ -204,7 +206,7 @@ impl ops::Div for Quantity {
 			// 200 / 20% = 5
 			other.remove_units();
 
-			self.total_amount() / (self.total_amount() * (other.total_amount() / 100.0))
+			self.total_amount() / (self.total_amount() * (other.total_amount() / Decimal::new(100, 0)))
 		} else {
 			self.total_amount() / other.total_amount()
 		};
@@ -216,7 +218,7 @@ impl ops::Div for Quantity {
 			std::cmp::max
 		);
 
-		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or(1.0);
+		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
 
 		Quantity::new_from_base_unit(total_amount * factor, unit)
 	}
@@ -224,21 +226,13 @@ impl ops::Div for Quantity {
 
 impl PartialOrd for Quantity {
 	fn partial_cmp(&self, other: &Quantity) -> Option<Ordering> {
-		Some(
-			if self.amount() == other.amount() {
-				Ordering::Equal
-			} else if self.amount() > other.amount() {
-				Ordering::Greater
-			} else {
-				Ordering::Less
-			}
-		)
+		self.amount().partial_cmp(&other.amount())
 	}
 }
 
 impl PartialEq for Quantity {
 	fn eq(&self, other: &Quantity) -> bool {
-		self.amount() == other.amount()
+		self.amount().eq(&other.amount())
 	}
 }
 
@@ -295,7 +289,7 @@ impl Units {
 		self.base_2() == other.base_2()
 	}
 
-	pub fn total_factor(&self) -> f64 {
+	pub fn total_factor(&self) -> Decimal {
 		let base = self.base().base_factor();
 
 		if let Some(div) = self.base_2() {
@@ -358,27 +352,13 @@ impl PartialEq for Units {
 
 impl PartialOrd for Units {
 	fn partial_cmp(&self, other: &Units) -> Option<cmp::Ordering> {
-		Some(
-			if self.total_factor() > other.total_factor() {
-				cmp::Ordering::Greater
-			} else if self.total_factor() > other.total_factor() {
-				cmp::Ordering::Less
-			} else {
-				cmp::Ordering::Equal
-			}
-		)
+		self.total_factor().partial_cmp(&other.total_factor())
 	}
 }
 
 impl Ord for Units {
 	fn cmp(&self, other: &Units) -> cmp::Ordering {
-		if self.total_factor() > other.total_factor() {
-			cmp::Ordering::Greater
-		} else if self.total_factor() > other.total_factor() {
-			cmp::Ordering::Less
-		} else {
-			cmp::Ordering::Equal
-		}
+		self.total_factor().cmp(&other.total_factor())
 	}
 }
 

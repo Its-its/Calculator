@@ -4,6 +4,9 @@
 use std::fmt;
 use std::cmp;
 
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
+
 use crate::Units;
 
 pub mod si;
@@ -64,7 +67,7 @@ macro_rules! create_non_standard_unit {
 				vec![$($alts),*]
 			}
 
-			fn base_factor(&self) -> f64 {
+			fn base_factor(&self) -> Decimal {
 				$factor
 			}
 
@@ -145,8 +148,8 @@ pub trait BaseUnit: fmt::Debug + CloneBaseUnit {
 	fn short(&self) -> Option<&str>;
 	fn alt(&self) -> Vec<&str>;
 
-	fn base_factor(&self) -> f64 {
-		1.0
+	fn base_factor(&self) -> Decimal {
+		dec!(1.0)
 	}
 
 	fn base_unit(&self) -> &dyn BaseUnit;
@@ -183,27 +186,13 @@ impl PartialEq for dyn BaseUnit {
 
 impl PartialOrd for dyn BaseUnit {
 	fn partial_cmp(&self, other: &dyn BaseUnit) -> Option<cmp::Ordering> {
-		Some(
-			if self.base_factor() > other.base_factor() {
-				cmp::Ordering::Greater
-			} else if self.base_factor() > other.base_factor() {
-				cmp::Ordering::Less
-			} else {
-				cmp::Ordering::Equal
-			}
-		)
+		self.base_factor().partial_cmp(&other.base_factor())
 	}
 }
 
 impl Ord for dyn BaseUnit {
 	fn cmp(&self, other: &dyn BaseUnit) -> cmp::Ordering {
-		if self.base_factor() > other.base_factor() {
-			cmp::Ordering::Greater
-		} else if self.base_factor() > other.base_factor() {
-			cmp::Ordering::Less
-		} else {
-			cmp::Ordering::Equal
-		}
+		self.base_factor().cmp(&other.base_factor())
 	}
 }
 

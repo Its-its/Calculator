@@ -25,25 +25,25 @@ macro_rules! create_single {
 	};
 }
 
-macro_rules! create_double {
-	($struc:ident, $func:ident) => {
-		#[derive(Debug, Clone)]
-		pub struct $struc;
+// macro_rules! create_double {
+// 	($struc:ident, $func:ident) => {
+// 		#[derive(Debug, Clone)]
+// 		pub struct $struc;
 
-		impl FunctionEval for $struc {
-			fn eval(&self, params: Vec<Quantity>) -> FunctionResult {
-				let mut iter = params.into_iter();
+// 		impl FunctionEval for $struc {
+// 			fn eval(&self, params: Vec<Quantity>) -> FunctionResult {
+// 				let mut iter = params.into_iter();
 
-				let mut first = next(&mut iter)?;
-				let second = next(&mut iter)?;
+// 				let mut first = next(&mut iter)?;
+// 				let second = next(&mut iter)?;
 
-				first.set_amount(first.amount().$func(second.amount()));
+// 				first.set_amount(first.amount().$func(second.amount()));
 
-				Ok(first)
-			}
-		}
-	};
-}
+// 				Ok(first)
+// 			}
+// 		}
+// 	};
+// }
 
 
 #[derive(Debug, Clone)]
@@ -89,34 +89,34 @@ create_single!(Round, round);
 create_single!(Trunc, trunc);
 create_single!(Fract, fract);
 create_single!(Abs, abs);
-create_single!(Signum, signum);
-create_single!(Sqrt, sqrt);
-create_single!(Exp, exp);
-create_single!(Exp2, exp2);
-create_single!(NaturalLogarithm, ln);
-create_single!(Log2, log2);
-create_single!(Log10, log10);
-create_single!(CubicRoot, cbrt);
-create_single!(Sine, sin);
-create_single!(Cosine, cos);
-create_single!(Tangent, tan);
-create_single!(Arcsine, asin);
-create_single!(Arctangent, atan);
-create_single!(Arccosine, acos);
-create_single!(HyperbolicSine, sinh);
-create_single!(HyperbolicTangent, tanh);
-create_single!(HyperbolicCosine, cosh);
-create_single!(InverseHyperbolicSine, asinh);
-create_single!(InverseHyperbolicTangent, atanh);
-create_single!(InverseHyperbolicCosine, acosh);
+// create_single!(Signum, signum);
+// create_single!(Sqrt, sqrt);
+// create_single!(Exp, exp);
+// create_single!(Exp2, exp2);
+// create_single!(NaturalLogarithm, ln);
+// create_single!(Log2, log2);
+// create_single!(Log10, log10);
+// create_single!(CubicRoot, cbrt);
+// create_single!(Sine, sin);
+// create_single!(Cosine, cos);
+// create_single!(Tangent, tan);
+// create_single!(Arcsine, asin);
+// create_single!(Arctangent, atan);
+// create_single!(Arccosine, acos);
+// create_single!(HyperbolicSine, sinh);
+// create_single!(HyperbolicTangent, tanh);
+// create_single!(HyperbolicCosine, cosh);
+// create_single!(InverseHyperbolicSine, asinh);
+// create_single!(InverseHyperbolicTangent, atanh);
+// create_single!(InverseHyperbolicCosine, acosh);
 
-create_double!(Copysign, copysign);
-create_double!(DivEuclid, div_euclid);
-create_double!(RemEuclid, rem_euclid);
-create_double!(Pow, powf);
-create_double!(Log, log);
-create_double!(Hypot, hypot);
-create_double!(Atan2, atan2);
+// create_double!(Copysign, copysign);
+// create_double!(DivEuclid, div_euclid);
+// create_double!(RemEuclid, rem_euclid);
+// create_double!(Pow, powf);
+// create_double!(Log, log);
+// create_double!(Hypot, hypot);
+// create_double!(Atan2, atan2);
 
 
 

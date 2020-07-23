@@ -1,3 +1,5 @@
+use rust_decimal::Decimal;
+
 use conversion::{BaseUnit, FunctionEval};
 
 use crate::{Parser, ParseValue, functions, units, consts, Result};
@@ -6,7 +8,7 @@ use crate::{Parser, ParseValue, functions, units, consts, Result};
 pub struct Factory {
 	functions: Vec<(String, Box<dyn FunctionEval>)>,
 	units: Vec<Box<dyn BaseUnit>>,
-	consts: Vec<(String, f64)>
+	consts: Vec<(String, Decimal)>
 }
 
 impl Factory {
@@ -24,7 +26,7 @@ impl Factory {
 	}
 
 
-	pub fn add_constant(&mut self, name: String, value: f64) {
+	pub fn add_constant(&mut self, name: String, value: Decimal) {
 		self.consts.push((name, value));
 	}
 
@@ -33,7 +35,7 @@ impl Factory {
 		self.functions.as_slice()
 	}
 
-	pub fn get_constants(&self) -> &[(String, f64)] {
+	pub fn get_constants(&self) -> &[(String, Decimal)] {
 		self.consts.as_slice()
 	}
 
@@ -42,7 +44,7 @@ impl Factory {
 	}
 
 
-	pub fn find_const(&self, name: &str) -> Option<f64> {
+	pub fn find_const(&self, name: &str) -> Option<Decimal> {
 		self.consts
 		.iter()
 		.find(|u| u.0 == name)
