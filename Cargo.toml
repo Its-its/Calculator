@@ -3,5 +3,6 @@
 members = [
 	"conversion",
 	"web",
-	"parser"
+	"parser",
+	"cli"
 ]

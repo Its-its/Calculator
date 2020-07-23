@@ -247,6 +247,13 @@ impl ExprToken {
 			_ => panic!("Not an Literal")
 		}
 	}
+
+	pub fn into_number(self) -> f64 {
+		match self {
+			ExprToken::Number(l) => l,
+			_ => panic!("Not an Number")
+		}
+	}
 }
 
 impl fmt::Display for ExprToken {
