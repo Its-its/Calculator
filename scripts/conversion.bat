@@ -1,0 +1,1 @@
+cd ../conversion && cargo build
