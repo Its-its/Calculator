@@ -189,45 +189,32 @@ pub enum ExprToken {
 
 impl ExprToken {
 	pub fn is_number(&self) -> bool {
-		match self {
-			ExprToken::Number(_) => true,
-			_ => false
-		}
+		matches!(self, ExprToken::Number(_))
 	}
 
 	pub fn is_operator(&self) -> bool {
-		match self {
-			ExprToken::Operator(_) => true,
-			_ => false
-		}
+		matches!(self, ExprToken::Operator(_))
 	}
 
 	pub fn is_literal(&self) -> bool {
-		match self {
-			ExprToken::Literal(_) => true,
-			_ => false
-		}
+		matches!(self, ExprToken::Literal(_))
 	}
 
 	pub fn is_expr_operator(&self) -> bool {
 		match self {
-			ExprToken::Operator(o) => match o {
+			ExprToken::Operator(o) => matches!(o,
 				Operator::Plus |
 				Operator::Minus |
 				Operator::Multiply |
 				Operator::Divide |
-				Operator::Division => true,
-				_ => false
-			},
+				Operator::Division
+			),
 			_ => false
 		}
 	}
 
 	pub fn is_expr_caret(&self) -> bool {
-		match self {
-			ExprToken::Operator(Operator::Caret) => true,
-			_ => false
-		}
+		matches!(self, ExprToken::Operator(Operator::Caret))
 	}
 
 	pub fn as_operator(&self) -> &Operator {

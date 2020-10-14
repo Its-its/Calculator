@@ -47,7 +47,7 @@ macro_rules! create_non_standard_unit {
 
 
 	(full $unitName:ident, $baseUnit:expr, $factor:expr, $longName:expr, $multiName:expr, $shortName:expr, [$($alts:expr),*]) => {
-		#[derive(Debug, Clone)]
+		#[derive(Debug, Clone, PartialEq)]
 		pub struct $unitName;
 
 		impl BaseUnit for $unitName {
@@ -93,7 +93,7 @@ macro_rules! create_standard_unit {
 	};
 
 	(full $unitName:ident, $longName:expr, $multiName:expr, $shortName:expr, [$($alts:expr),*]) => {
-		#[derive(Debug, Clone)]
+		#[derive(Debug, Clone, PartialEq)]
 		pub struct $unitName;
 
 		impl BaseUnit for $unitName {
@@ -159,6 +159,7 @@ pub trait BaseUnit: fmt::Debug + CloneBaseUnit {
 	}
 }
 
+// PartialEq string == BaseUnit
 impl PartialEq<&str> for &Box<dyn BaseUnit> {
 	fn eq(&self, other: &&str) -> bool {
 		self.long() == *other ||
@@ -168,6 +169,7 @@ impl PartialEq<&str> for &Box<dyn BaseUnit> {
 	}
 }
 
+// PartialEq string == BaseUnit
 impl PartialEq<&str> for &dyn BaseUnit {
 	fn eq(&self, other: &&str) -> bool {
 		self.long() == *other ||
@@ -223,5 +225,37 @@ pub fn is_convertable(from: &Units, to: &Units) -> bool {
 	match (from_base, to_base) {
 		(Some(from), Some(to)) => from == to,
 		_ => true
+	}
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CustomUnit(String);
+
+impl CustomUnit {
+	pub fn new(unit: String) -> Self {
+		CustomUnit(unit)
+	}
+}
+
+impl BaseUnit for CustomUnit {
+	fn multiple(&self) -> &str {
+		self.0.as_str()
+	}
+
+	fn long(&self) -> &str {
+		self.0.as_str()
+	}
+
+	fn short(&self) -> Option<&str> {
+		Some(self.0.as_str())
+	}
+
+	fn alt(&self) -> Vec<&str> {
+		Vec::new()
+	}
+
+	fn base_unit(&self) -> &dyn BaseUnit {
+		self
 	}
 }

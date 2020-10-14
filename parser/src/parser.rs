@@ -679,7 +679,7 @@ impl TokenSlicer {
 			found.append(&mut self.find(token));
 		}
 
-		found.sort();
+		found.sort_unstable();
 
 		if self.is_reversed() {
 			found.reverse();
