@@ -44,7 +44,7 @@ impl Quantity {
 
 	pub fn new_from_base_unit(value: Decimal, unit: Option<Units>) -> Quantity {
 		if let Some(unit) = unit {
-			Quantity(value / unit.base().base_factor(), Some(unit))
+			Quantity(value / unit.base().factor_amount(), Some(unit))
 		} else {
 			Quantity(value, None)
 		}
@@ -73,7 +73,7 @@ impl Quantity {
 
 	pub fn total_amount(&self) -> Decimal {
 		if let Some(unit) = self.unit() {
-			self.amount() * unit.base().base_factor()
+			self.amount() * unit.base().factor_amount()
 		} else {
 			self.amount()
 		}
@@ -192,7 +192,7 @@ impl ops::Mul for Quantity {
 			std::cmp::max
 		);
 
-		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
+		let factor = unit.as_ref().map(|i| i.base().factor_amount()).unwrap_or_else(|| Decimal::new(1, 0));
 
 		Quantity::new_from_base_unit(total_amount / factor, unit)
 	}
@@ -218,7 +218,7 @@ impl ops::Div for Quantity {
 			std::cmp::max
 		);
 
-		let factor = unit.as_ref().map(|i| i.base().base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
+		let factor = unit.as_ref().map(|i| i.base().factor_amount()).unwrap_or_else(|| Decimal::new(1, 0));
 
 		Quantity::new_from_base_unit(total_amount * factor, unit)
 	}
@@ -282,18 +282,19 @@ impl Units {
 	}
 
 	pub fn is_base_equal(&self, other: &Units) -> bool {
-		self.base() == other.base()
+		self.base().base_unit() == other.base().base_unit()
 	}
 
 	pub fn is_base_2_equal(&self, other: &Units) -> bool {
-		self.base_2() == other.base_2()
+		self.base_2().map(|b| b.base_unit()) ==
+		other.base_2().map(|b| b.base_unit())
 	}
 
 	pub fn total_factor(&self) -> Decimal {
-		let base = self.base().base_factor();
+		let base = self.base().factor_amount();
 
 		if let Some(div) = self.base_2() {
-			base / div.base_factor()
+			base / div.factor_amount()
 		} else {
 			base
 		}
@@ -338,9 +339,9 @@ impl fmt::Display for Units {
 
 impl PartialEq for Units {
 	fn eq(&self, other: &Units) -> bool {
-		if self.base() == other.base() {
+		if self.base().base_unit() == other.base().base_unit() {
 			match (self.base_2(), other.base_2()) {
-				(Some(u1), Some(u2)) => u1 == u2,
+				(Some(u1), Some(u2)) => u1.base_unit() == u2.base_unit(),
 				(None, None) => true,
 				_ => false
 			}

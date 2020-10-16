@@ -40,8 +40,8 @@ impl Value {
 
 	pub fn base_factor(&self) -> Decimal {
 		match self {
-			Value::Quantity(q) => q.unit().map(|u| u.base().base_factor()).unwrap_or_else(|| Decimal::new(1, 0)),
-			Value::Unit(u) => u.base().base_factor()
+			Value::Quantity(q) => q.unit().map(|u| u.base().factor_amount()).unwrap_or_else(|| Decimal::new(1, 0)),
+			Value::Unit(u) => u.base().factor_amount()
 		}
 	}
 

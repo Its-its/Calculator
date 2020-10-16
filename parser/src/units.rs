@@ -108,12 +108,12 @@ pub fn convert(from: &Value, to: &Value) -> Result<Decimal> {
 		let mut val = from.amount().unwrap();
 
 		if from_unit.is_base_equal(to_unit) {
-			val = val * from_unit.base().base_factor() / to_unit.base().base_factor();
+			val = val * from_unit.base().factor_amount() / to_unit.base().factor_amount();
 		}
 
 		if from_unit.is_base_2_equal(to_unit) {
-			let factor_1 = from_unit.base_2().map(|b| b.base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
-			let factor_2 = to_unit.base_2().map(|b| b.base_factor()).unwrap_or_else(|| Decimal::new(1, 0));
+			let factor_1 = from_unit.base_2().map(|b| b.factor_amount()).unwrap_or_else(|| Decimal::new(1, 0));
+			let factor_2 = to_unit.base_2().map(|b| b.factor_amount()).unwrap_or_else(|| Decimal::new(1, 0));
 
 			val = (val / factor_1) * factor_2;
 		}

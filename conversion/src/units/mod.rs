@@ -69,7 +69,7 @@ macro_rules! create_non_standard_unit {
 				vec![$($alts),*]
 			}
 
-			fn base_factor(&self) -> Decimal {
+			fn factor_amount(&self) -> Decimal {
 				$factor
 			}
 
@@ -150,7 +150,7 @@ pub trait BaseUnit: fmt::Debug + CloneBaseUnit {
 	fn short(&self) -> Option<&str>;
 	fn alt(&self) -> Vec<&str>;
 
-	fn base_factor(&self) -> Decimal {
+	fn factor_amount(&self) -> Decimal {
 		dec!(1.0)
 	}
 
@@ -182,25 +182,25 @@ impl PartialEq<&str> for &dyn BaseUnit {
 }
 
 // Simple check to see if the base long name == other long name.
-impl PartialEq for dyn BaseUnit {
-	fn eq(&self, other: &dyn BaseUnit) -> bool {
-		self.base_long() == other.base_long()
+impl PartialEq for &dyn BaseUnit {
+	fn eq(&self, other: &&dyn BaseUnit) -> bool {
+		self.long() == other.long()
 	}
 }
 
-impl PartialOrd for dyn BaseUnit {
-	fn partial_cmp(&self, other: &dyn BaseUnit) -> Option<cmp::Ordering> {
-		self.base_factor().partial_cmp(&other.base_factor())
+impl PartialOrd for &dyn BaseUnit {
+	fn partial_cmp(&self, other: &&dyn BaseUnit) -> Option<cmp::Ordering> {
+		self.factor_amount().partial_cmp(&other.factor_amount())
 	}
 }
 
-impl Ord for dyn BaseUnit {
-	fn cmp(&self, other: &dyn BaseUnit) -> cmp::Ordering {
-		self.base_factor().cmp(&other.base_factor())
+impl Ord for &dyn BaseUnit {
+	fn cmp(&self, other: &&dyn BaseUnit) -> cmp::Ordering {
+		self.factor_amount().cmp(&other.factor_amount())
 	}
 }
 
-impl Eq for dyn BaseUnit {}
+impl Eq for &dyn BaseUnit {}
 
 impl fmt::Display for dyn BaseUnit {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -217,7 +217,7 @@ pub fn is_convertable(from: &Units, to: &Units) -> bool {
 	let from_base = from.base();
 	let to_base = to.base();
 
-	if from_base != to_base {
+	if from_base.base_unit() != to_base.base_unit() {
 		return false;
 	}
 
@@ -225,7 +225,7 @@ pub fn is_convertable(from: &Units, to: &Units) -> bool {
 	let to_base = to.base_2();
 
 	match (from_base, to_base) {
-		(Some(from), Some(to)) => from == to,
+		(Some(from), Some(to)) => from.base_unit() == to.base_unit(),
 		_ => true
 	}
 }
