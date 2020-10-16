@@ -35,7 +35,7 @@ pub mod equations;
 pub use factory::Factory;
 pub use error::{Error, Result};
 pub use tokens::{Operator, ExprToken, TokenType};
-pub use parser::{Parser, ParseValue};
+pub use parser::{Parser, ParseValue, TokenSlicer};
 pub use tokenizer::Tokenizer;
 pub use value::Value;
 pub use operations::ExpressionArg;

@@ -1,7 +1,6 @@
 use rust_decimal::Decimal;
 
 use conversion::{BaseUnit, FunctionEval};
-use conversion::units::CustomUnit;
 
 use crate::{Parser, ParseValue, functions, units, consts, Result};
 
@@ -60,12 +59,11 @@ impl Factory {
 		.map(|i| i.1.clone())
 	}
 
-	pub fn find_unit(&self, name: &str) -> Box<dyn BaseUnit> {
+	pub fn find_unit(&self, name: &str) -> Option<Box<dyn BaseUnit>> {
 		self.units
 		.iter()
 		.find(|u| u == &name)
 		.cloned()
-		.unwrap_or_else(|| Box::new(CustomUnit::new(name.to_string())))
 	}
 
 	pub fn is_custom_unit(&self, name: &str) -> bool {

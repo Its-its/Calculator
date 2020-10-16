@@ -4,6 +4,8 @@ use std::ops::RangeBounds;
 use rust_decimal::Decimal;
 
 use conversion::{Quantity, Units};
+use conversion::units::CustomUnit;
+
 
 use crate::{Factory, Operator, ExprToken, Tokenizer, Result, Error, Value};
 use crate::operations::{Literal, Function, ExpressionArg};
@@ -92,10 +94,18 @@ impl PartialEq<Value> for ParseValue {
 }
 
 
+#[derive(Default)]
+pub struct ParserOpts {
+	pub ignore_custom_units: bool,
+}
+
+
 pub struct Parser<'a> {
 	factory: &'a Factory,
 	tokenizer: Tokenizer<'a>,
-	pub steps: Vec<Vec<ExprToken>>
+	pub steps: Vec<Vec<ExprToken>>,
+	pub options: ParserOpts
+
 }
 
 impl<'a> Parser<'a> {
@@ -104,6 +114,7 @@ impl<'a> Parser<'a> {
 			factory,
 			steps: Vec::new(),
 			tokenizer: Tokenizer::new(eval, factory),
+			options: ParserOpts::default()
 		}
 	}
 
@@ -112,6 +123,7 @@ impl<'a> Parser<'a> {
 			factory,
 			tokenizer,
 			steps: Vec::new(),
+			options: ParserOpts::default()
 		}
 	}
 
@@ -180,7 +192,7 @@ impl<'a> Parser<'a> {
 		}
 	}
 
-	fn parse_neighbors(&self, slicer: &mut TokenSlicer) -> Result<bool> {
+	pub fn parse_neighbors(&self, slicer: &mut TokenSlicer) -> Result<bool> {
 		let mut updated = false;
 		// [ Number(5.0), Literal("min"), Number(30.0), Literal("sec") ]
 		// [ Number(5.5), Literal("min") ]
@@ -262,6 +274,7 @@ impl<'a> Parser<'a> {
 
 		self.parse_finished(slicer)
 	}
+
 
 	pub fn parse_exponents(&self, pos: usize, slicer: &mut TokenSlicer) -> ExpressionResult {
 		print_dbg!("parse_exponents");
@@ -472,7 +485,7 @@ impl<'a> Parser<'a> {
 	}
 
 
-	fn parse_number_expression(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
+	pub fn parse_number_expression(&self, slicer: &mut TokenSlicer) -> ExpressionResult {
 		let start_pos = slicer.get_pos();
 
 		if slicer.is_reversed() {
@@ -513,7 +526,12 @@ impl<'a> Parser<'a> {
 				// Checks for Division. Then checks to see if token after it is a operator or doesn't exist.
 				if slicer.is_next_value(&Operator::Division.into()) && slicer.get(slicer.get_pos() + 1).map(|t| t.is_operator()).unwrap_or(true) {
 					slicer.next_pos();
-					unit = Some(Units::new(self.factory.find_unit("%")));
+
+					if let Some(found) = self.factory.find_unit("%") {
+						unit = Some(Units::new(found));
+					} else if !self.options.ignore_custom_units {
+						unit = Some(Units::new(Box::new(CustomUnit::new("%".to_string()))))
+					}
 				}
 			}
 
@@ -535,7 +553,7 @@ impl<'a> Parser<'a> {
 		Ok(None)
 	}
 
-	fn parse_unit_expression(&self, slicer: &mut TokenSlicer) -> Result<Option<Units>> {
+	pub fn parse_unit_expression(&self, slicer: &mut TokenSlicer) -> Result<Option<Units>> {
 		if slicer.is_next_value_func(|v| v.is_literal()) {
 			let literal_val = return_value!(slicer, ExprToken::Literal);
 
@@ -543,12 +561,18 @@ impl<'a> Parser<'a> {
 			let split = literal_val.split('/');
 
 			for name in split {
-				let base_unit = self.factory.find_unit(name);
-
-				units.push(base_unit);
+				if let Some(base_unit) = self.factory.find_unit(name) {
+					units.push(base_unit);
+				} else if !self.options.ignore_custom_units {
+					units.push(Box::new(CustomUnit::new("%".to_string())));
+				}
 			}
 
-			Ok(Some(Units::new_vec(units)))
+			if units.is_empty() {
+				Ok(None)
+			} else {
+				Ok(Some(Units::new_vec(units)))
+			}
 		} else {
 			Ok(None)
 		}
@@ -590,6 +614,10 @@ impl TokenSlicer {
 			pos: 0,
 			reversed: false
 		}
+	}
+
+	pub fn get_tokens(&self) -> &[ExprToken] {
+		&self.tokens
 	}
 
 	pub fn is_finished(&self) -> bool {

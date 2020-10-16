@@ -24,7 +24,19 @@ pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 		Box::new(Century),
 
 		// LENGTH
+		Box::new(PicoMeter),
+		Box::new(NanoMeter),
+		Box::new(MicroMeter),
+		Box::new(MilliMeter),
+		Box::new(CentiMeter),
+		Box::new(DeciMeter),
 		Box::new(Meter),
+		Box::new(DecaMeter),
+		Box::new(HectoMeter),
+		Box::new(KiloMeter),
+		Box::new(MegaMeter),
+		Box::new(GigaMeter),
+		Box::new(TeraMeter),
 
 		Box::new(Inch),
 		Box::new(Feet),
@@ -43,6 +55,29 @@ pub fn default_units() -> Vec<Box<dyn BaseUnit>> {
 		Box::new(ExaByte),
 		Box::new(ZettaByte),
 		// Box::new(YottaByte)
+
+		// MASS
+		Box::new(PicoGram),
+		Box::new(NanoGram),
+		Box::new(MicroGram),
+		Box::new(MilliGram),
+		Box::new(CentiGram),
+		Box::new(DeciGram),
+		Box::new(Gram),
+		Box::new(DecaGram),
+		Box::new(HectoGram),
+		Box::new(KiloGram),
+		Box::new(MegaGram),
+		Box::new(GigaGram),
+		Box::new(TeraGram),
+
+		Box::new(Tonne),
+		Box::new(KiloTonne),
+		Box::new(MegaTonne),
+		Box::new(GigaTonne),
+
+		Box::new(Pound),
+		Box::new(Ounce),
 	]
 }
 
