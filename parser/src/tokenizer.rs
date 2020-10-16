@@ -61,6 +61,10 @@ impl<'a> Tokenizer<'a> {
 	}
 
 	pub fn parse(&mut self) -> Result<()> {
+		if self.value.is_finished() {
+			return Ok(());
+		}
+
 		let mut compiled = Vec::new();
 
 		while !self.value.is_finished() {
