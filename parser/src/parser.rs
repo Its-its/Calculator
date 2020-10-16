@@ -228,23 +228,23 @@ impl<'a> Parser<'a> {
 		print_dbg!(" - Parse: {:?}", slicer.tokens);
 
 		// EXPONENTS ^
-		let found_exp = slicer.find(&Operator::Caret.into());
+		let found_exp = slicer.find_indexes(&Operator::Caret.into());
 		if let Some(pos) = found_exp.first() {
 			return self.parse_exponents(*pos, slicer);
 		}
 
 		// GROUPINGS ( [ {  } ] )
-		let found_grps = slicer.find_multiple(&[ExprToken::StartGrouping, ExprToken::EndGrouping]).into_iter();
+		let found_grps = slicer.find_multiple_indexes(&[ExprToken::StartGrouping, ExprToken::EndGrouping]).into_iter();
 		for pos in found_grps {
 			let found = self.parse_parentheses(pos, slicer)?;
 			if found.is_some() { return Ok(found); }
 		}
 
 
-		let mut found_ops = slicer.find_multiple(&[Operator::Multiply.into(), Operator::Divide.into()]);
-		found_ops.append(&mut slicer.find_multiple(&[Operator::Plus.into(), Operator::Minus.into()]));
-		found_ops.append(&mut slicer.find(&Operator::ConvertInto.into()));
-		found_ops.append(&mut slicer.find_multiple(&[
+		let mut found_ops = slicer.find_multiple_indexes(&[Operator::Multiply.into(), Operator::Divide.into()]);
+		found_ops.append(&mut slicer.find_multiple_indexes(&[Operator::Plus.into(), Operator::Minus.into()]));
+		found_ops.append(&mut slicer.find_indexes(&Operator::ConvertInto.into()));
+		found_ops.append(&mut slicer.find_multiple_indexes(&[
 			Operator::GreaterThan.into(),
 			Operator::GreaterThanOrEqual.into(),
 			Operator::LessThan.into(),
@@ -650,7 +650,7 @@ impl TokenSlicer {
 		}
 	}
 
-	pub fn find(&self, token: &ExprToken) -> Vec<usize> {
+	pub fn find_indexes(&self, token: &ExprToken) -> Vec<usize> {
 		let mut found: Vec<usize> = self.tokens.iter()
 			.enumerate()
 			.filter(|(i, e)| {
@@ -672,11 +672,11 @@ impl TokenSlicer {
 		found
 	}
 
-	pub fn find_multiple(&self, tokens: &[ExprToken]) -> Vec<usize> {
+	pub fn find_multiple_indexes(&self, tokens: &[ExprToken]) -> Vec<usize> {
 		let mut found = Vec::new();
 
 		for token in tokens {
-			found.append(&mut self.find(token));
+			found.append(&mut self.find_indexes(token));
 		}
 
 		found.sort_unstable();
@@ -724,14 +724,6 @@ impl TokenSlicer {
 
 	pub fn previous(&self) -> Option<&ExprToken> {
 		self.get(self.pos - 1)
-	}
-
-	pub fn next(&mut self) -> Option<ExprToken> {
-		let token = self.tokens.get(self.pos).cloned();
-
-		self.consume(1);
-
-		token
 	}
 
 	pub fn peek(&self) -> Option<&ExprToken> {
@@ -791,5 +783,17 @@ impl TokenSlicer {
 		}
 
 		Err("Not the next token.".into())
+	}
+}
+
+impl Iterator for TokenSlicer {
+	type Item = ExprToken;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		let token = self.tokens.get(self.pos).cloned();
+
+		self.consume(1);
+
+		token
 	}
 }
