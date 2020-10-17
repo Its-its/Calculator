@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use regex::Regex;
 
 use crate::{ExprToken, TokenType, Operator, Result, Factory};
@@ -32,13 +34,13 @@ pub static SINGLE_CHAR_TOKENS: [Id<ExprToken>; 16] = [
 	("^", ExprToken::Operator(Operator::Caret))
 ];
 
-
-pub type ParseResult = Option<ExprToken>;
+pub type RangedType = Range<usize>;
+pub type ParseResult = Option<(RangedType, ExprToken)>;
 
 
 pub struct Tokenizer<'a> {
 	pub factory: &'a Factory,
-	compiled: Vec<ExprToken>,
+	compiled: Vec<(RangedType, ExprToken)>,
 
 	value: StringSlice<'a>
 }
@@ -52,20 +54,18 @@ impl<'a> Tokenizer<'a> {
 		}
 	}
 
-	pub fn get_compiled(&self) -> &[ExprToken] {
-		self.compiled.as_ref()
+	pub fn get_tokens(&self) -> Vec<ExprToken> {
+		self.compiled.iter().map(|(_, e)| e.clone()).collect()
 	}
 
-	pub fn into_compiled(self) -> Vec<ExprToken> {
-		self.compiled
+	pub fn get_compiled(&self) -> &[(RangedType, ExprToken)] {
+		self.compiled.as_ref()
 	}
 
 	pub fn parse(&mut self) -> Result<()> {
 		if self.value.is_finished() {
 			return Ok(());
 		}
-
-		let mut compiled = Vec::new();
 
 		while !self.value.is_finished() {
 			let found = None
@@ -76,7 +76,7 @@ impl<'a> Tokenizer<'a> {
 				.or_else(|| self.parse_literal());
 
 			if let Some(found) = found {
-				compiled.push(found);
+				self.compiled.push(found);
 			} else {
 				print_dbg!("Unable to finish. Stopped at: {:?}", self.value.get_remaining_str());
 
@@ -84,21 +84,20 @@ impl<'a> Tokenizer<'a> {
 			}
 		}
 
-		self.compiled = compiled.into_iter().filter(|i| i != &ExprToken::Whitespace).collect();
-
 		Ok(())
 	}
 
 
 	fn remove_non_essiential(&mut self) -> ParseResult {
 		if self.value.consume_if(" ") {
-			Some(ExprToken::Whitespace)
+			Some((self.value.pos - 1..self.value.pos, ExprToken::Whitespace))
 		} else {
 			None
 		}
 	}
 
 	fn parse_number(&mut self) -> ParseResult {
+		let start_pos = self.value.pos;
 		let remains = self.value.get_remaining_str();
 
 		let builder = Regex::new(r#"^((?:[0-9,]+)?\.?(?:e-?)?(?:[0-9]+)?)"#).unwrap();
@@ -107,7 +106,7 @@ impl<'a> Tokenizer<'a> {
 			let mut end = found.end();
 
 			if end != 0 {
-				let num = {
+				let num  = {
 					// If ending has a comma remove it.
 					if remains.get(end - 1..end) == Some(",") {
 						end -= 1;
@@ -120,7 +119,7 @@ impl<'a> Tokenizer<'a> {
 
 				self.value.consume_amount(end);
 
-				Some(ExprToken::Number(num))
+				Some((start_pos..start_pos + end, ExprToken::Number(num)))
 			} else {
 				None
 			}
@@ -130,6 +129,7 @@ impl<'a> Tokenizer<'a> {
 	}
 
 	fn parse_literal(&mut self) -> ParseResult {
+		let start_pos = self.value.pos;
 		let remains = self.value.get_remaining_str();
 
 		let builder = Regex::new(r#"^([^\d\s\(\)\[\]\{\}]+)"#).unwrap();
@@ -144,9 +144,9 @@ impl<'a> Tokenizer<'a> {
 
 				// Check if it's a const.
 				if let Some(item) = self.factory.find_const(found.as_str()) {
-					Some(ExprToken::Number(item))
+					Some((start_pos..start_pos + end, ExprToken::Number(item)))
 				} else {
-					Some(ExprToken::Literal(found))
+					Some((start_pos..start_pos + end, ExprToken::Literal(found)))
 				}
 			} else {
 				None
@@ -157,16 +157,18 @@ impl<'a> Tokenizer<'a> {
 	}
 
 	fn parse_tokens(&mut self, tokens: &[Id<ExprToken>]) -> ParseResult {
+		let start_pos = self.value.pos;
+
 		for token in tokens {
-			if self.value.consume_if(token.0) {
-				return Some(token.1.clone());
+			if self.value.consume_if(&token.0) {
+				return Some((start_pos..self.value.pos, token.1.clone()));
 			}
 		}
 
 		None
 	}
 
-	pub fn find_tokens<'b>(&'b self, tokens: &'b [TokenType]) -> impl Iterator<Item = &[ExprToken]> + 'b {
+	pub fn find_tokens<'b>(&'b self, tokens: &'b [TokenType]) -> impl Iterator<Item = &[(RangedType, ExprToken)]> + 'b {
 		self.find_tokens_index(tokens)
 			.map(move |(start, end)| self.compiled.get(start..=end).unwrap())
 	}
@@ -190,7 +192,7 @@ impl<'a> Tokenizer<'a> {
 				state.step = 0;
 			}
 
-			if &tokens[state.step] == token {
+			if tokens[state.step] == token.1 {
 				state.step += 1;
 			} else {
 				state.step = 0;

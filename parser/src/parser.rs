@@ -94,10 +94,25 @@ impl PartialEq<Value> for ParseValue {
 }
 
 
-#[derive(Default)]
 pub struct ParserOpts {
+	/// If a Literal isn't found for a Unit don't create a CustomUnit from it.
 	pub ignore_custom_units: bool,
+	/// Currently just removes the case sensitivity for unit names.
+	pub ignore_exact_unit_name: bool,
+	/// Ignore Whitespaces when parsing.
+	pub ignore_white_space: bool,
 }
+
+impl Default for ParserOpts {
+	fn default() -> Self {
+		ParserOpts {
+			ignore_custom_units: false,
+			ignore_exact_unit_name: false,
+			ignore_white_space: true
+		}
+	}
+}
+
 
 
 pub struct Parser<'a> {
@@ -127,8 +142,8 @@ impl<'a> Parser<'a> {
 		}
 	}
 
-	pub fn get_parsed_tokens(&self) -> &[ExprToken] {
-		self.tokenizer.get_compiled()
+	pub fn get_parsed_tokens(&self) -> Vec<ExprToken> {
+		self.tokenizer.get_tokens()
 	}
 
 	pub fn parse(&mut self) -> Result<ParseValue> {
@@ -136,7 +151,13 @@ impl<'a> Parser<'a> {
 
 		print_dbg!("Parsed Tokens: {:?}", self.get_parsed_tokens());
 
-		let mut slicer = TokenSlicer::new(self.get_parsed_tokens().to_vec());
+		let mut slicer = TokenSlicer::new(
+			if self.options.ignore_white_space {
+				self.get_parsed_tokens().into_iter().filter(|e| e != &ExprToken::Whitespace).collect()
+			} else {
+				self.get_parsed_tokens()
+			}
+		);
 
 		if self.parse_neighbors(&mut slicer)? {
 			self.steps.push(slicer.tokens.clone());
@@ -601,6 +622,7 @@ impl<'a> Parser<'a> {
 }
 
 
+// TODO: Replace Vec with slice
 pub struct TokenSlicer {
 	reversed: bool,
 	tokens: Vec<ExprToken>,
