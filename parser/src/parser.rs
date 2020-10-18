@@ -117,7 +117,7 @@ impl Default for ParserOpts {
 
 pub struct Parser<'a> {
 	factory: &'a Factory,
-	tokenizer: Tokenizer<'a>,
+	pub tokenizer: Tokenizer<'a>,
 	pub steps: Vec<Vec<ExprToken>>,
 	pub options: ParserOpts
 
