@@ -14,12 +14,16 @@ pub mod time;
 pub mod data;
 pub mod mass;
 pub mod length;
+pub mod frequency;
+pub mod temperature;
 
 pub use si::*;
 pub use time::*;
 pub use data::*;
 pub use mass::*;
 pub use length::*;
+pub use frequency::*;
+pub use temperature::*;
 
 
 #[macro_export]

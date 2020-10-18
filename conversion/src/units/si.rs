@@ -9,7 +9,7 @@ use super::BaseUnit;
 // match_conv(typeName, [SECOND = 1.0, ])
 
 
-
+// Base Units
 create_standard_unit!(Second, "second", "seconds", "s");
 create_standard_unit!(Meter, "meter", "meters", "m");
 create_standard_unit!(Gram, "gram", "grams", "g");
@@ -17,3 +17,6 @@ create_standard_unit!(Ampere, "ampere", "amperes", "A");
 create_standard_unit!(Mole, "mole", "moles", "mol");
 create_standard_unit!(Kelvin, "kelvin", "kelvins", "K");
 create_standard_unit!(Candela, "candela", "candelas", "cd");
+
+// Derived Units
+create_standard_unit!(Hertz, "hertz", "hertz", "Hz");
