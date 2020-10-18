@@ -251,6 +251,12 @@ fn return_unit<E, F>(u1: Option<E>, u2: Option<E>, func: F) -> Option<E> where F
 }
 
 
+// TODO
+pub enum UnitLocation {
+	Before,
+	After,
+	BeforeOrAfter
+}
 
 
 // Units.

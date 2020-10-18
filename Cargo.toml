@@ -4,5 +4,6 @@ members = [
 	"conversion",
 	"web",
 	"parser",
-	"cli"
+	"cli",
+	"text"
 ]

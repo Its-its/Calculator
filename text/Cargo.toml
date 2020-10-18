@@ -1,0 +1,16 @@
+[package]
+name = "conversion-text"
+version = "0.1.0"
+authors = ["Timothy <2779546+Its-its@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+conversion = { path = "../conversion", version = "0.1.0" }
+conversion-parser = { path = "../parser", version = "0.1.0" }
+
+regex = "1.4.1"
+
+rust_decimal = "1.8.1"
+rust_decimal_macros = "1.8.1"
