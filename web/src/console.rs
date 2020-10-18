@@ -187,7 +187,8 @@ pub fn fn_list_command(factory: &Factory) {
 
 fn into_tokens(value: &str, factory: &Factory) -> Vec<ExprToken> {
 	let mut token = Tokenizer::new(value, factory);
+
 	token.parse().unwrap();
 
-	token.into_compiled()
+	token.get_tokens()
 }
