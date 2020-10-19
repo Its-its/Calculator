@@ -1,7 +1,7 @@
 use std::{ops, fmt, cmp};
 use std::cmp::{Ordering, PartialOrd};
 
-use rust_decimal::Decimal;
+use rust_decimal::{Decimal, prelude::FromPrimitive};
 
 use crate::{BaseUnit, Result};
 
@@ -98,6 +98,24 @@ impl Quantity {
 		} else {
 			other
 		}
+	}
+}
+
+impl From<(Decimal, Box<dyn BaseUnit>)> for Quantity {
+	fn from((value, unit): (Decimal, Box<dyn BaseUnit>)) -> Self {
+		Quantity::new_from_base_unit(value, Some(Units::new(unit)))
+	}
+}
+
+impl<B: BaseUnit + 'static> From<(Decimal, B)> for Quantity {
+	fn from((value, unit): (Decimal, B)) -> Self {
+		Quantity::new_from_base_unit(value, Some(Units::new(Box::new(unit))))
+	}
+}
+
+impl<B: BaseUnit + 'static> From<(f64, B)> for Quantity {
+	fn from((value, unit): (f64, B)) -> Self {
+		Quantity::new_from_base_unit(Decimal::from_f64(value).unwrap(), Some(Units::new(Box::new(unit))))
 	}
 }
 
