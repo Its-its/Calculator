@@ -9,7 +9,7 @@ fn main() -> Result<()> {
 	// - matcher_for(GigaByte).quantity_unit(100.0, GigaByte).find_greater_than().exists()
 	// - matcher_for(GigaByte).quantity_unit(100.0, GigaByte).label(label)
 
-	println!("{:?}", parsed.greater_than(&GigaByte, (100.0, GigaByte)));
+	println!("{:?}", parsed.greater_than(GigaByte, (100.0, GigaByte)));
 
 
 	Ok(())
