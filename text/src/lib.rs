@@ -7,10 +7,13 @@ use conversion_parser::{Factory, Parser, Tokenizer, TokenSlicer, ExprToken};
 pub mod error;
 pub mod cmp;
 pub mod text;
+pub mod label;
+pub mod matcher;
 
 pub use error::{Result, Error};
 pub use text::{TextStructure, TextValue};
-
+pub use matcher::Matcher;
+pub use label::Label;
 
 // Parses text
 pub fn parse<'a>(text: &'a str, factory: Factory) -> Result<TextStructure<'a>> {
