@@ -381,7 +381,7 @@ impl<'a> Parser<'a> {
 				print_dbg!(" - Function Literal: {}", func_name);
 
 				let func = self.factory.find_func(func_name)
-					.ok_or_else(|| Error::Text("Not a valid function.".into()))?;
+					.ok_or_else(|| Error::InvalidFunction)?;
 
 				// Capture everything after Function Name and inside the parentheses.
 				let mut inner_slicer = slicer.clone_from(start_pos + 1, slicer.tokens.len() - 1);
@@ -822,17 +822,6 @@ impl TokenSlicer {
 		}
 
 		false
-	}
-
-	pub fn consume_token(&mut self, value: &ExprToken) -> Result<()> {
-		if let Some(found) = self.tokens.get(self.pos) {
-			if found == value {
-				self.consume(1);
-				return Ok(());
-			}
-		}
-
-		Err("Not the next token.".into())
 	}
 }
 

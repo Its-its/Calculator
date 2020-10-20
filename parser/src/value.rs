@@ -24,23 +24,23 @@ impl Value {
 	}
 
 
-	pub fn as_base_unit(&self) -> Option<&Units> {
-		match self {
-			Value::Quantity(q) => q.unit(),
-			Value::Unit(u) => Some(u)
-		}
+	pub fn as_base_unit(&self) -> Result<&Units> {
+		Ok(match self {
+			Value::Quantity(q) => q.unit()?,
+			Value::Unit(u) => u
+		})
 	}
 
-	pub fn clone_base_unit(&self) -> Option<Units> {
-		match self {
-			Value::Quantity(q) => q.unit().cloned(),
-			Value::Unit(u) => Some(u.clone())
-		}
+	pub fn clone_base_unit(&self) -> Result<Units> {
+		Ok(match self {
+			Value::Quantity(q) => q.unit().map(|i| i.clone())?,
+			Value::Unit(u) => u.clone()
+		})
 	}
 
 	pub fn base_factor(&self) -> Decimal {
 		match self {
-			Value::Quantity(q) => q.unit().map(|u| u.base().factor_amount()).unwrap_or_else(|| Decimal::new(1, 0)),
+			Value::Quantity(q) => q.unit().map(|u| u.base().factor_amount()).unwrap_or_else(|_| Decimal::new(1, 0)),
 			Value::Unit(u) => u.base().factor_amount()
 		}
 	}
@@ -118,7 +118,7 @@ impl Value {
 				Ok(Value::Quantity(value))
 			}
 
-			_ => Err("Unable to add.".into())
+			_ => Err(Error::UnableToOperateValues(Operator::Plus))
 		}
 	}
 
@@ -132,7 +132,7 @@ impl Value {
 				Ok(Value::Quantity(value))
 			}
 
-			_ => Err("Unable to subtract.".into())
+			_ => Err(Error::UnableToOperateValues(Operator::Minus))
 		}
 	}
 
@@ -146,7 +146,7 @@ impl Value {
 				Ok(Value::Quantity(value))
 			}
 
-			_ => Err("Unable to multiply.".into())
+			_ => Err(Error::UnableToOperateValues(Operator::Multiply))
 		}
 	}
 
@@ -162,7 +162,7 @@ impl Value {
 				Ok(Value::Quantity(value))
 			}
 
-			_ => Err("Unable to divide.".into())
+			_ => Err(Error::UnableToOperateValues(Operator::Divide))
 		}
 	}
 
@@ -178,14 +178,14 @@ impl Value {
 	// 			Ok(Value::Quantity(value))
 	// 		}
 
-	// 		_ => Err("Unable to divide.".into())
+	// 		_ => Err(Error::UnableToOperateValues(Operator::Division))
 	// 	}
 	// }
 
 	pub fn try_conversion(left: Value, right: Value) -> Result<Value> {
 		let (l_amount, r_amount) = (left.amount(), right.amount());
 
-		let unit = right.clone_base_unit();
+		let unit = right.clone_base_unit().ok();
 
 		let value = convert(&left, &right)?;
 
@@ -204,7 +204,7 @@ impl Value {
 			Operator::LessThanOrEqual => (l_amount <= r_amount) as i64,
 			Operator::DoubleEqual => (l_amount == r_amount) as i64,
 			Operator::DoesNotEqual => (l_amount != r_amount) as i64,
-			_ => return Err(Error::Text("Invalid Operator when trying to compare".into()))
+			_ => return Err(Error::InvalidOperator)
 		};
 
 		print_dbg!("Comp: {} {} {} = {}", l_amount.clone().unwrap_or_default(), op, r_amount.clone().unwrap_or_default(), value);
@@ -225,7 +225,7 @@ impl PartialEq for Value {
 impl Clone for Value {
 	fn clone(&self) -> Self {
 		match self {
-			Value::Quantity(q) => Value::Quantity(Quantity::new_unit(q.amount(), q.unit().cloned())),
+			Value::Quantity(q) => Value::Quantity(Quantity::new_unit(q.amount(), q.unit().ok().cloned())),
 			Value::Unit(u) => Value::Unit(u.clone())
 		}
 	}

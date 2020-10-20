@@ -30,7 +30,7 @@ impl<'a> TextStructure<'a> {
 	pub fn find<B: BaseUnit>(&self, unit: &B) -> Vec<&TextValue> {
 		self.parsed.iter()
 		.filter(|v| if let TextValue::Parsed(v) = v {
-			v.as_base_unit().map(|u| u.base().base_unit()) == Some(unit.base_unit())
+			v.as_base_unit().map(|u| u.base().base_unit()).ok() == Some(unit.base_unit())
 		} else {
 			false
 		})

@@ -98,10 +98,10 @@ pub fn can_operate(one: &ExpressionArg, two: &ExpressionArg) -> bool {
 
 pub fn convert(from: &Value, to: &Value) -> Result<Decimal> {
 	// TODO: Currently will error if doing: 1 -> ms
-	let from_unit = from.as_base_unit().ok_or_else(|| Error::Text("Cannot convert something that doesn't have a unit".into()))?;
+	let from_unit = from.as_base_unit()?;
 	let to_unit = match to.as_base_unit() {
-		Some(u) => u,
-		None => return from.amount().ok_or_else(|| Error::Text("Base Conversion isn't a number.".into()))
+		Ok(u) => u,
+		Err(e) => return from.amount().ok_or(e)
 	};
 
 	if is_convertable(from_unit, to_unit) {
@@ -120,6 +120,6 @@ pub fn convert(from: &Value, to: &Value) -> Result<Decimal> {
 
 		Ok(val)
 	} else {
-		Err(format!(r#"Values of type "{}" and "{}" are not able to be compaired or converted."#, from_unit.long(), to_unit.long()).into())
+		Err(Error::UnableToConvertValues(from_unit.long(), to_unit.long()))
 	}
 }

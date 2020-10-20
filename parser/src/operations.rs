@@ -169,7 +169,7 @@ impl Expression for Function {
 			.collect::<Result<Vec<Value>>>()?;
 
 		let params = params.into_iter()
-			.map(|i| i.into_quantity().ok_or_else(|| Error::Text("Expected Quantity".into())))
+			.map(|i| i.into_quantity().ok_or_else(|| Error::ExpectedQuantity))
 			.collect::<Result<Vec<Quantity>>>()?;
 
 		Ok(Value::Quantity(self.0.eval(params)?))

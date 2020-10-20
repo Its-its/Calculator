@@ -3,7 +3,7 @@ use std::cmp::{Ordering, PartialOrd};
 
 use rust_decimal::{Decimal, prelude::FromPrimitive};
 
-use crate::{BaseUnit, Result};
+use crate::{BaseUnit, Result, Error};
 
 
 pub mod math;
@@ -72,15 +72,15 @@ impl Quantity {
 	}
 
 	pub fn total_amount(&self) -> Decimal {
-		if let Some(unit) = self.unit() {
+		if let Ok(unit) = self.unit() {
 			self.amount() * unit.base().factor_amount()
 		} else {
 			self.amount()
 		}
 	}
 
-	pub fn unit(&self) -> Option<&Units> {
-		self.1.as_ref()
+	pub fn unit(&self) -> Result<&Units> {
+		self.1.as_ref().ok_or(Error::MissingUnit)
 	}
 
 	pub fn into_unit(self) -> Option<Units> {
@@ -124,7 +124,7 @@ impl fmt::Display for Quantity {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str(&format!("{}", self.amount()))?;
 
-		if let Some(u) = self.unit() {
+		if let Ok(u) = self.unit() {
 			f.write_str(" ")?;
 
 			u.fmt(f)?;
